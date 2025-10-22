@@ -2,6 +2,8 @@
 
 import type React from "react"
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { authService } from "@/services/authService"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,16 +19,41 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle signup logic here
-    console.log("Signup attempt with:", {
-      firstName,
-      lastName,
-      email,
-      password,
-    })
+    setError("")
+
+    // Validate passwords match
+    if (password !== confirmPassword) {
+      setError("Passwords do not match")
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const username = `${firstName} ${lastName}`
+      const response = await authService.signup({ username, email, password })
+      
+      if (response.userId) {
+        // Store user data in localStorage
+        localStorage.setItem('user', JSON.stringify(response))
+        console.log("Signup successful:", response)
+        // Navigate to dashboard or home page
+        navigate('/dashboard')
+      } else {
+        setError(response.message)
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Signup failed. Please try again.")
+      console.error("Signup error:", err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -52,6 +79,11 @@ export default function SignupPage() {
             <p className="text-gray-500">
               Join NoteTect to start organizing your notes
             </p>
+            {error && (
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
           </div>
 
           <form className="space-y-6" onSubmit={handleSignup}>
@@ -161,8 +193,6 @@ export default function SignupPage() {
               </div>
             </motion.div>
 
-
-
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -209,8 +239,9 @@ export default function SignupPage() {
               <Button
                 type="submit"
                 className="w-full bg-black hover:bg-gray-800 text-white font-medium py-3 rounded-lg"
+                disabled={loading}
               >
-                Create Account
+                {loading ? "Creating Account..." : "Create Account"}
               </Button>
             </motion.div>
           </form>

@@ -3,6 +3,8 @@
 import type React from "react"
 
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { authService } from "@/services/authService"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -14,11 +16,33 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle login logic here
-    console.log("Login attempt with:", { email, password })
+    setError("")
+    setLoading(true)
+
+    try {
+      const response = await authService.login({ email, password })
+      
+      if (response.userId) {
+        // Store user data in localStorage
+        localStorage.setItem('user', JSON.stringify(response))
+        console.log("Login successful:", response)
+        // Navigate to dashboard or home page
+        navigate('/dashboard')
+      } else {
+        setError(response.message)
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Login failed. Please try again.")
+      console.error("Login error:", err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -42,6 +66,11 @@ export default function LoginPage() {
           <div className="mb-6">
             <h2 className="text-2xl font-semibold text-black mb-2">Log In</h2>
             <p className="text-gray-500">Enter your credentials to access your notes</p>
+            {error && (
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
           </div>
 
           <form className="space-y-6" onSubmit={handleLogin}>
@@ -109,8 +138,12 @@ export default function LoginPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.8 }}
             >
-              <Button type="submit" className="w-full bg-black hover:bg-gray-800 text-white font-medium py-3 rounded-lg">
-                Log In
+              <Button 
+                type="submit" 
+                className="w-full bg-black hover:bg-gray-800 text-white font-medium py-3 rounded-lg"
+                disabled={loading}
+              >
+                {loading ? "Logging in..." : "Log In"}
               </Button>
             </motion.div>
           </form>
