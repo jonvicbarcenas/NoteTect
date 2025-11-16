@@ -1,81 +1,117 @@
 import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { Upload } from 'lucide-react';
 
-function Dashboard(): JSX.Element {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+function Dashboard() {
+  const [topic, setTopic] = useState('');
+  const [context, setContext] = useState('');
+  const [activeCategory, setActiveCategory] = useState('All');
+
+  const categories = ['All', 'Work', 'Personal', 'Learning', 'Health'];
 
   const onGenerate = (e: React.FormEvent) => {
     e.preventDefault();
-    alert('Generate clicked');
+    alert(`Generate notes for: ${topic}`);
   };
 
   return (
-    <div className="dashboard-page">
-      <style>{`
-        .dashboard-page { font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji; color: #000; }
-        .nav { position: sticky; top: 0; z-index: 10; background: #e6e6e6; border-bottom: 1px solid #d1d1d1; }
-        .nav-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 16px; }
-        .brand { font-weight: 700; font-size: 22px; letter-spacing: -0.02em; }
-        .nav-actions { display: flex; gap: 12px; }
-        .btn { appearance: none; border: 0; background: #bdbdbd; padding: 10px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: filter .15s ease, transform .02s ease; }
-        .btn:active { transform: translateY(1px); }
-        .btn.dark { background: #9f9f9f; color: #000; }
-        .main { max-width: 900px; margin: 64px auto; padding: 0 16px; }
-        .hero { text-align: center; margin-bottom: 32px; }
-        .title { font-size: 44px; line-height: 1.05; font-weight: 800; letter-spacing: -0.03em; }
-        .cta { margin-top: 20px; display: flex; gap: 16px; justify-content: center; }
-        .card { margin: 36px auto 0; max-width: 720px; border: 1px solid #6b6b6b; border-radius: 10px; padding: 24px; }
-        .card h3 { margin: 0 0 12px 0; font-size: 14px; }
-        .input { width: 100%; background: #dedede; border: 0; border-radius: 6px; height: 36px; padding: 8px 12px; outline: none; }
-        .textarea { width: 100%; background: #dedede; border: 0; border-radius: 6px; padding: 12px; height: 140px; resize: vertical; outline: none; }
-        .gen-btn { width: 100%; background: #000; color: #fff; border: 0; border-radius: 6px; height: 34px; font-weight: 600; cursor: pointer; margin-top: 14px; }
-        @media (max-width: 480px) { .title { font-size: 32px; } .nav-inner { padding: 12px 16px; } }
-      `}</style>
-
-      <header className="nav">
-        <div className="nav-inner">
-          <div className="brand">NoteTect</div>
-          <div className="nav-actions">
-            <button className="btn">Log In</button>
-            <button className="btn dark">Sign Up</button>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <div className="w-64 bg-gray-900 text-white p-6 flex flex-col">
+        <div className="flex items-center mb-8">
+          <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center text-white font-bold mr-3">
+            NT
           </div>
+          <h1 className="text-xl font-bold">NoteTect</h1>
         </div>
-      </header>
 
-      <main className="main">
-        <section className="hero">
-          <h1 className="title">Generate Perfect
-            <br />Notes Instantly
-          </h1>
-          <div className="cta">
-            <button className="btn" aria-label="Get Started">Get Started</button>
-            <button className="btn dark" aria-label="Learn More">Learn More</button>
-          </div>
-        </section>
+        <div className="space-y-1 mb-6">
+          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Categories</h2>
+          {categories.map((category) => (
+            <button
+              key={category}
+              onClick={() => setActiveCategory(category)}
+              className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeCategory === category
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-300 hover:bg-gray-800'
+              }`}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
 
-        <section className="card" aria-labelledby="try-generator-title">
-          <h3 id="try-generator-title">Try Notes Generator</h3>
+        <Button className="mt-auto bg-blue-600 hover:bg-blue-700">
+          + New Note
+        </Button>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 p-8">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">Create</h1>
+          <div className="text-gray-500 cursor-pointer">⋮</div>
+        </div>
+
+        <Card className="max-w-3xl mx-auto">
+          <CardHeader>
+            <CardTitle>Generate Notes</CardTitle>
+            <CardDescription>
+              Enter a topic and context to generate comprehensive notes.
+            </CardDescription>
+          </CardHeader>
           <form onSubmit={onGenerate}>
-            <input
-              className="input"
-              placeholder="Title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-            <div style={{ height: 12 }} />
-            <textarea
-              className="textarea"
-              placeholder="Content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-            />
-            <button type="submit" className="gen-btn">Generate</button>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="topic">Topic</Label>
+                <Input
+                  id="topic"
+                  placeholder="Enter your topic"
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="context">Context (Optional)</Label>
+                <Textarea
+                  id="context"
+                  placeholder="Add any additional context or specific points you want to include"
+                  className="min-h-[120px]"
+                  value={context}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                    setContext(e.target.value)
+                  }
+                />
+              </div>
+
+              <div className="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center">
+                <div className="flex flex-col items-center justify-center">
+                  <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                  <p className="text-sm text-gray-500">
+                    Drag and drop files here, or click to upload
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Supports PDF, DOCX, and TXT (max 10MB)
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-end border-t px-6 py-4">
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                Generate Notes
+              </Button>
+            </CardFooter>
           </form>
-        </section>
-      </main>
+        </Card>
+      </div>
     </div>
   );
 }
 
 export default Dashboard;
-
