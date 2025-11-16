@@ -5,7 +5,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff, CheckCircle2, Circle } from "lucide-react"
 import { Link } from "react-router-dom"
 import { motion } from "framer-motion"
 
@@ -17,6 +17,18 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
+  // Live password requirement checks
+  const hasLength = password.length >= 8
+  const hasCaseMix = /[a-z]/.test(password) && /[A-Z]/.test(password)
+  const hasNumber = /\d/.test(password)
+
+  const ReqItem = ({ met, children }: { met: boolean; children: React.ReactNode }) => (
+    <div className={`flex items-center gap-2 ${met ? "text-green-600" : "text-gray-500"}`}>
+      {met ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
+      <span>{children}</span>
+    </div>
+  )
 
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault()
@@ -159,10 +171,10 @@ export default function SignupPage() {
                   )}
                 </button>
               </div>
-              <div className="mt-2 space-y-1 text-[11px] leading-4 text-gray-500">
-                <p>At least 8 characters</p>
-                <p>Upper & lowercase letters</p>
-                <p>At least one number</p>
+              <div className="mt-2 space-y-1 text-[11px] leading-4" aria-live="polite">
+                <ReqItem met={hasLength}>At least 8 characters</ReqItem>
+                <ReqItem met={hasCaseMix}>Upper & lowercase letters</ReqItem>
+                <ReqItem met={hasNumber}>At least one number</ReqItem>
               </div>
             </motion.div>
 
