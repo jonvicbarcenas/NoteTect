@@ -6,7 +6,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff, Mail } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion"
 
@@ -25,7 +25,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center py-16 px-4 sm:px-6 lg:px-8">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -42,9 +42,9 @@ export default function LoginPage() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="bg-white p-8 border border-gray-200 rounded-2xl shadow-sm"
         >
-          <div className="mb-6">
-            <h2 className="text-2xl font-semibold text-black mb-2">Log In</h2>
-            <p className="text-gray-500">Enter your credentials to access your notes</p>
+          <div className="mb-6 text-center">
+            <h2 className="text-2xl font-semibold text-black mb-1">Welcome Back</h2>
+            <p className="text-gray-500">Sign in to access your account</p>
           </div>
 
           <form className="space-y-6" onSubmit={handleLogin}>
@@ -55,19 +55,22 @@ export default function LoginPage() {
               className="space-y-2"
             >
               <Label htmlFor="email" className="text-sm font-medium text-black">
-                Email
+                Email Address
               </Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-                placeholder="Enter your email"
-              />
+              <div className="relative">
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+                  placeholder="Enter your email address"
+                />
+                <Mail className="h-4 w-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              </div>
             </motion.div>
 
             <motion.div
@@ -88,7 +91,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
                   placeholder="Enter your password"
                 />
                 <button
@@ -101,10 +104,12 @@ export default function LoginPage() {
               </div>
             </motion.div>
 
-            <div className="text-left">
-              <a href="#" className="text-sm text-gray-500 hover:text-gray-700">
-                Forgot password?
-              </a>
+            <div className="flex items-center justify-between text-sm">
+              <label htmlFor="remember" className="flex items-center gap-2 text-gray-600">
+                <input id="remember" name="remember" type="checkbox" className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600" />
+                Remember me
+              </label>
+              <Link to="#" className="text-blue-600 hover:underline">Forgot password?</Link>
             </div>
 
             <motion.div
@@ -112,8 +117,8 @@ export default function LoginPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.8 }}
             >
-              <Button type="submit" className="w-full bg-black hover:bg-gray-800 text-white font-medium py-3 rounded-lg">
-                Log In
+              <Button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium py-3 rounded-lg">
+                Sign In
               </Button>
             </motion.div>
           </form>
@@ -126,8 +131,8 @@ export default function LoginPage() {
           >
             <p className="text-sm text-gray-600">
               {"Don't have an account? "}
-              <Link to="/signup" className="font-medium text-black hover:underline">
-                Sign Up
+              <Link to="/signup" className="font-medium text-blue-600 hover:underline">
+                Create one
               </Link>
             </p>
           </motion.div>
