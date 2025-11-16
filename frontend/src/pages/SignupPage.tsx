@@ -5,7 +5,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff, CheckCircle2, Circle } from "lucide-react"
 import { Link } from "react-router-dom"
 import { motion } from "framer-motion"
 
@@ -17,6 +17,18 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
+  // Live password requirement checks
+  const hasLength = password.length >= 8
+  const hasCaseMix = /[a-z]/.test(password) && /[A-Z]/.test(password)
+  const hasNumber = /\d/.test(password)
+
+  const ReqItem = ({ met, children }: { met: boolean; children: React.ReactNode }) => (
+    <div className={`flex items-center gap-2 ${met ? "text-green-600" : "text-gray-500"}`}>
+      {met ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
+      <span>{children}</span>
+    </div>
+  )
 
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault()
@@ -30,7 +42,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center py-16 px-4 sm:px-6 lg:px-8">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -48,9 +60,9 @@ export default function SignupPage() {
           className="bg-white p-8 border border-gray-200 rounded-2xl shadow-sm"
         >
           <div className="mb-6">
-            <h2 className="text-2xl font-semibold text-black mb-2">Create an Account</h2>
+            <h2 className="text-2xl font-semibold text-black mb-2">Sign Up</h2>
             <p className="text-gray-500">
-              Join NoteTect to start organizing your notes
+              Join thousands of users who organize their thoughts with NoteTect
             </p>
           </div>
 
@@ -76,7 +88,7 @@ export default function SignupPage() {
                   required
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
                   placeholder="Enter your first name"
                 />
               </div>
@@ -95,7 +107,7 @@ export default function SignupPage() {
                   required
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
                   placeholder="Enter your last name"
                 />
               </div>
@@ -118,8 +130,8 @@ export default function SignupPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-                placeholder="Enter your email"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+                placeholder="Enter your email address"
               />
             </motion.div>
 
@@ -144,8 +156,8 @@ export default function SignupPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-                  placeholder="Enter your password"
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+                  placeholder="Create a strong password"
                 />
                 <button
                   type="button"
@@ -159,9 +171,12 @@ export default function SignupPage() {
                   )}
                 </button>
               </div>
+              <div className="mt-2 space-y-1 text-[11px] leading-4" aria-live="polite">
+                <ReqItem met={hasLength}>At least 8 characters</ReqItem>
+                <ReqItem met={hasCaseMix}>Upper & lowercase letters</ReqItem>
+                <ReqItem met={hasNumber}>At least one number</ReqItem>
+              </div>
             </motion.div>
-
-
 
             <motion.div
               initial={{ opacity: 0, x: 20 }}
@@ -184,7 +199,7 @@ export default function SignupPage() {
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
                   placeholder="Confirm your password"
                 />
                 <button
@@ -208,7 +223,7 @@ export default function SignupPage() {
             >
               <Button
                 type="submit"
-                className="w-full bg-black hover:bg-gray-800 text-white font-medium py-3 rounded-lg"
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium py-3 rounded-lg"
               >
                 Create Account
               </Button>
@@ -225,7 +240,7 @@ export default function SignupPage() {
               {"Already have an account? "}
               <Link
                 to="/login"
-                className="font-medium text-black hover:underline"
+                className="font-medium text-blue-600 hover:underline"
               >
                 Log In
               </Link>
