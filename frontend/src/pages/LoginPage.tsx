@@ -9,19 +9,35 @@ import { Label } from "@/components/ui/label"
 import { Eye, EyeOff, Mail } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion"
+import { authService, type ApiError } from "@/services/auth"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle login logic here
-    console.log("Login attempt with:", { email, password })
-    // TODO: replace with real auth then redirect on success
-    navigate('/dashboard')
+    setLoading(true)
+    setError(null)
+
+    try {
+      const response = await authService.login({ email, password })
+      
+      // Store user data in localStorage
+      localStorage.setItem('user', JSON.stringify(response))
+      
+      // Redirect to dashboard
+      navigate('/dashboard')
+    } catch (err) {
+      const apiError = err as ApiError
+      setError(apiError.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -46,6 +62,12 @@ export default function LoginPage() {
             <h2 className="text-2xl font-semibold text-black mb-1">Welcome Back</h2>
             <p className="text-gray-500">Sign in to access your account</p>
           </div>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
 
           <form className="space-y-6" onSubmit={handleLogin}>
             <motion.div
@@ -117,8 +139,12 @@ export default function LoginPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.8 }}
             >
-              <Button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium py-3 rounded-lg">
-                Sign In
+              <Button 
+                type="submit" 
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? "Signing In..." : "Sign In"}
               </Button>
             </motion.div>
           </form>

@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Eye, EyeOff, CheckCircle2, Circle } from "lucide-react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
+import { authService, type ApiError } from "@/services/auth"
 
 export default function SignupPage() {
   const [firstName, setFirstName] = useState("")
@@ -17,6 +18,9 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate()
 
   // Live password requirement checks
   const hasLength = password.length >= 8
@@ -30,15 +34,40 @@ export default function SignupPage() {
     </div>
   )
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle signup logic here
-    console.log("Signup attempt with:", {
-      firstName,
-      lastName,
-      email,
-      password,
-    })
+    setLoading(true)
+    setError(null)
+
+    // Validate password match
+    if (password !== confirmPassword) {
+      setError("Passwords do not match")
+      setLoading(false)
+      return
+    }
+
+    // Validate password requirements
+    if (!hasLength || !hasCaseMix || !hasNumber) {
+      setError("Please meet all password requirements")
+      setLoading(false)
+      return
+    }
+
+    try {
+      const name = `${firstName} ${lastName}`.trim()
+      const response = await authService.signup({ name, email, password })
+      
+      // Store user data in localStorage
+      localStorage.setItem('user', JSON.stringify(response))
+      
+      // Redirect to dashboard
+      navigate('/dashboard')
+    } catch (err) {
+      const apiError = err as ApiError
+      setError(apiError.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -65,6 +94,12 @@ export default function SignupPage() {
               Join thousands of users who organize their thoughts with NoteTect
             </p>
           </div>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
 
           <form className="space-y-6" onSubmit={handleSignup}>
             <motion.div
@@ -223,9 +258,10 @@ export default function SignupPage() {
             >
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium py-3 rounded-lg"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Create Account
+                {loading ? "Creating Account..." : "Create Account"}
               </Button>
             </motion.div>
           </form>

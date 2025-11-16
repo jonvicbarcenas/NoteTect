@@ -5,7 +5,7 @@ import com.appdev.notetect.backend.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@CrossOrigin(origins = {"http://localhost:5173", "http://127.0.0.1:5173"})
+@CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"})
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
