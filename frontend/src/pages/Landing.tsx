@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 export default function Landing() {
   const navigate = useNavigate();
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
       <header className="border-b border-border">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -29,7 +29,7 @@ export default function Landing() {
       </header>
 
       {/* Hero Section */}
-      <section className="min-h-[calc(100vh-80px)] flex items-center justify-center px-6" style={{ backgroundColor: '#2D4A73' }}>
+      <section className="flex-1 flex items-center justify-center px-6" style={{ backgroundColor: '#2D4A73' }}>
         <div className="max-w-2xl text-center space-y-6">
           <h1 className="text-5xl md:text-6xl font-bold text-white leading-tight text-balance">
             Generate Perfect Notes Instantly
