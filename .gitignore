@@ -25,3 +25,6 @@ frontend/dist-ssr
 env/
 venv/
 __pycache__/
+
+# env
+.env
