@@ -1,6 +1,6 @@
-package com.appdev.notetect.backend.repository;
+package com.appdevg4.krazyrapidboots.notetect.repository;
 
-import com.appdev.notetect.backend.entity.User;
+import com.appdevg4.krazyrapidboots.notetect.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

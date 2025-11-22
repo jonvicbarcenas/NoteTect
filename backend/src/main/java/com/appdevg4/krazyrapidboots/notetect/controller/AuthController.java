@@ -1,7 +1,7 @@
-package com.appdev.notetect.backend.controller;
+package com.appdevg4.krazyrapidboots.notetect.controller;
 
-import com.appdev.notetect.backend.entity.User;
-import com.appdev.notetect.backend.service.AuthService;
+import com.appdevg4.krazyrapidboots.notetect.entity.User;
+import com.appdevg4.krazyrapidboots.notetect.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

@@ -1,7 +1,7 @@
-package com.appdev.notetect.backend.controller;
+package com.appdevg4.krazyrapidboots.notetect.controller;
 
-import com.appdev.notetect.backend.entity.Subject;
-import com.appdev.notetect.backend.service.SubjectService;
+import com.appdevg4.krazyrapidboots.notetect.entity.Subject;
+import com.appdevg4.krazyrapidboots.notetect.service.SubjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
