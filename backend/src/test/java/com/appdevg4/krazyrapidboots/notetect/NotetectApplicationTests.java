@@ -1,4 +1,4 @@
-package com.appdev.notetect.backend;
+package com.appdevg4.krazyrapidboots.notetect;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -1,9 +1,15 @@
-package com.appdev.notetect.backend.entity;
+package com.appdevg4.krazyrapidboots.notetect.entity;
 
-import javax.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import jakarta.persistence.Id;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import lombok.AllArgsConstructor;
+import jakarta.persistence.Column;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Entity;
 
 @Entity
 @Data

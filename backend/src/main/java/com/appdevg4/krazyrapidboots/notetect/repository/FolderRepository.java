@@ -1,6 +1,6 @@
-package com.appdev.notetect.backend.repository;
+package com.appdevg4.krazyrapidboots.notetect.repository;
 
-import com.appdev.notetect.backend.entity.Folder;
+import com.appdevg4.krazyrapidboots.notetect.entity.Folder;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

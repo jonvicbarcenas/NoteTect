@@ -1,7 +1,7 @@
-package com.appdev.notetect.backend.service;
+package com.appdevg4.krazyrapidboots.notetect.service;
 
-import com.appdev.notetect.backend.entity.User;
-import com.appdev.notetect.backend.repository.UserRepository;
+import com.appdevg4.krazyrapidboots.notetect.entity.User;
+import com.appdevg4.krazyrapidboots.notetect.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;

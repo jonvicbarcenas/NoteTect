@@ -1,7 +1,7 @@
-package com.appdev.notetect.backend.service;
+package com.appdevg4.krazyrapidboots.notetect.service;
 
-import com.appdev.notetect.backend.entity.Folder;
-import com.appdev.notetect.backend.repository.FolderRepository;
+import com.appdevg4.krazyrapidboots.notetect.entity.Folder;
+import com.appdevg4.krazyrapidboots.notetect.repository.FolderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
