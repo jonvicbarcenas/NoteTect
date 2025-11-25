@@ -122,3 +122,59 @@ erDiagram
     }
 ```
 
+
+## Class Diagram || UML Diagram
+
+```mermaid
+classDiagram
+    class User {
+        -Int user_id
+        -String name
+        -String email
+        -String password
+        +registerAccount() User
+        +loginAccount() User
+        +updateProfile() void
+    }
+
+    class Note {
+        -Int note_id
+        -Int user_id
+        -Int folder_id
+        -Int subject_id
+        -String title
+        -String content
+        -String filename
+        -DateTime created_at
+        +assignSubject(subject : Subject) void
+        +getNoteDetails() String
+        +deleteNote(note_id : int) void
+        +viewNotes() List~Note~
+    }
+
+    class Folder {
+        -Int folder_id
+        -Int user_id
+        -String name
+        +addNote(note : Note) void
+        +viewNotes() List~Note~
+        +renameFolder(newName : String) void
+    }
+
+
+    class Subject {
+        -Int subject_id
+        -Int user_id
+        -String name
+        +addNote(note : Note) void
+        +viewNotes() List~Note~
+    }
+
+    %% Associations with multiplicities
+    User "1" --> "0..*" Note : creates
+    User "1" --> "0..*" Folder : owns
+    User "1" --> "0..*" Subject : creates
+    Folder "1" --> "0..*" Note : contains
+    Subject "1" --> "0..*" Note : categorizes
+```
+
