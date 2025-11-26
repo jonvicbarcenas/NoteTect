@@ -113,6 +113,7 @@ erDiagram
 
     Note {
         int id PK
+        string title
         string content
         string filename
         string created_at
