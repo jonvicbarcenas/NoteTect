@@ -17,4 +17,8 @@ export const foldersService = {
   async delete(id: number): Promise<void> {
     return api.delete(`/folders/${id}`);
   },
+
+  async rename(id: number, name: string): Promise<Folder> {
+    return api.put<Folder>(`/folders/${id}`, { name });
+  },
 };

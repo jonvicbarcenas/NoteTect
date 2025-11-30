@@ -5,13 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, Loader2, FileText, Sparkles, Menu, Save, LogOut, User } from 'lucide-react';
+import { Upload, Loader2, FileText, Sparkles, Menu, Save } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { generateContent } from '../services/geminiService';
 import { notesService } from '../services/notes';
-import { NOTE_TYPES } from '../constants';
 import { NoteType } from '../types';
 import { useAuth } from '../context/AuthContext';
+import { Sidebar, GenerationTools } from '../components/dashboard';
 
 function Dashboard() {
   const [topic, setTopic] = useState('');
@@ -118,69 +118,7 @@ function Dashboard() {
   return (
     <div className="min-h-screen bg-background flex font-sans text-foreground">
       {/* Sidebar */}
-      <aside className="w-72 bg-slate-900 border-r border-slate-800 hidden md:flex flex-col shadow-xl z-10 text-slate-300">
-        <div className="p-6 flex items-center gap-3 border-b border-slate-800/50">
-          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-900/20">
-            <Sparkles className="w-6 h-6" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-white">NoteTect</h1>
-            <p className="text-xs text-slate-400">AI Note Assistant</p>
-          </div>
-        </div>
-
-        <div className="p-4 space-y-1 flex-1 overflow-y-auto">
-          <p className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 mt-2">
-            Generation Tools
-          </p>
-          {NOTE_TYPES.map((type) => {
-            const Icon = type.icon;
-            const isActive = activeType === type.id;
-            return (
-              <button
-                key={type.id}
-                onClick={() => setActiveType(type.id)}
-                className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-3 group ${isActive
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-900/20'
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                  }`}
-              >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-indigo-400'}`} />
-                {type.label}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="p-4 border-t border-slate-800/50 space-y-3">
-          {user && (
-            <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center">
-                  <User className="w-4 h-4 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{user.name}</p>
-                  <p className="text-xs text-slate-400 truncate">{user.email}</p>
-                </div>
-              </div>
-            </div>
-          )}
-          <Button
-            variant="ghost"
-            className="w-full justify-start text-slate-400 hover:text-white hover:bg-slate-800"
-            onClick={handleLogout}
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Sign Out
-          </Button>
-          <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
-            <p className="text-xs text-slate-400 text-center">
-              Powered by Gemini 2.0 Flash
-            </p>
-          </div>
-        </div>
-      </aside>
+      <Sidebar user={user} onLogout={handleLogout} />
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden bg-secondary/30">
@@ -223,6 +161,9 @@ function Dashboard() {
                       </CardDescription>
                     </CardHeader>
                     <form onSubmit={onGenerate}>
+                      <CardContent className="pt-6 border-b border-border/50">
+                        <GenerationTools activeType={activeType} onTypeChange={setActiveType} />
+                      </CardContent>
                       <CardContent className="space-y-6 pt-6">
                         <div className="space-y-2">
                           <Label htmlFor="topic" className="text-sm font-medium">Topic / Title</Label>
@@ -397,7 +338,7 @@ function Dashboard() {
                     </div>
                     <h3 className="text-lg font-semibold mb-2">Ready to Generate</h3>
                     <p className="max-w-md text-sm">
-                      Select a tool from the sidebar, provide your content, and watch the AI craft your notes instantly.
+                      Select a tool, provide your content, and watch the AI craft your notes instantly.
                     </p>
                   </div>
                 )}

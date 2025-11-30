@@ -1,5 +1,5 @@
 import { NoteType } from './types';
-import { FileText, BookOpen, Layers, Zap, CheckSquare } from 'lucide-react';
+import { FileText, BookOpen, Zap, CheckSquare } from 'lucide-react';
 
 export const NOTE_TYPES = [
     {
@@ -13,12 +13,6 @@ export const NOTE_TYPES = [
         label: 'Study Guide',
         icon: BookOpen,
         prompt: 'Create a comprehensive study guide from the following content. Include key concepts, definitions, and review questions. Format as Markdown. Provide ONLY the study guide content, no other text. Do not say "Here is a study guide".'
-    },
-    {
-        id: NoteType.FLASHCARDS,
-        label: 'Flashcards',
-        icon: Layers,
-        prompt: 'Generate a set of flashcards from the content. Format as a list of "Question: [Question] \n Answer: [Answer]". Do not include any intro or outro text. Output ONLY the flashcards.'
     },
     {
         id: NoteType.SIMPLIFY,
