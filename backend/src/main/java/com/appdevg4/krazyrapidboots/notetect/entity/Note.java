@@ -10,6 +10,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Entity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Data
@@ -29,6 +30,12 @@ public class Note {
 
     // Timestamp for creation
     private String createdAt;
+
+    // The user who owns this note
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
+    private User user;
 
     // The folder this note belongs to
     @ManyToOne

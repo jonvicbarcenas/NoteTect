@@ -3,6 +3,7 @@ package com.appdevg4.krazyrapidboots.notetect.controller;
 import com.appdevg4.krazyrapidboots.notetect.entity.Note;
 import com.appdevg4.krazyrapidboots.notetect.service.NoteService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,8 +16,9 @@ public class NoteController {
     private NoteService noteService;
 
     @GetMapping
-    public List<Note> getAllNotes() {
-        return noteService.getAllNotes();
+    public List<Note> getAllNotes(Authentication authentication) {
+        Integer userId = (Integer) authentication.getPrincipal();
+        return noteService.getAllNotesByUserId(userId);
     }
 
     @GetMapping("/{id}")
@@ -25,8 +27,9 @@ public class NoteController {
     }
 
     @PostMapping
-    public Note createNote(@RequestBody Note note) {
-        return noteService.saveNote(note);
+    public Note createNote(@RequestBody Note note, Authentication authentication) {
+        Integer userId = (Integer) authentication.getPrincipal();
+        return noteService.saveNote(note, userId);
     }
 
     @DeleteMapping("/{id}")
