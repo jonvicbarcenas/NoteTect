@@ -25,6 +25,9 @@ public class Note {
     @Column(columnDefinition = "TEXT")
     private String content;
 
+    // The topic/title of the note
+    private String title;
+
     // The original filename (pdf, docx, etc.)
     private String filename;
 
