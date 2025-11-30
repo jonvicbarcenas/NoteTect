@@ -17,4 +17,8 @@ export const notesService = {
   async delete(id: number): Promise<void> {
     return api.delete(`/notes/${id}`);
   },
+
+  async update(id: number, title: string): Promise<Note> {
+    return api.put<Note>(`/notes/${id}`, { title });
+  },
 };

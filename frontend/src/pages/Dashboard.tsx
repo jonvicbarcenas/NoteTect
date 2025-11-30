@@ -76,6 +76,19 @@ function Dashboard() {
     // Keep topic/context so user doesn't lose their work
   };
 
+  const handleTitleChange = async (id: number, newTitle: string) => {
+    try {
+      const updatedNote = await notesService.update(id, newTitle);
+      if (selectedNote && selectedNote.id === id) {
+        setSelectedNote(updatedNote);
+      }
+      setNotesRefreshTrigger(prev => prev + 1);
+    } catch (error) {
+      console.error("Failed to update note title:", error);
+      // Optionally, show an error message to the user
+    }
+  };
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -283,6 +296,7 @@ function Dashboard() {
               <div className={`${showInputForm ? 'lg:col-span-7' : 'lg:col-span-12'} h-full transition-all duration-500 ease-in-out`}>
                 {showOutput ? (
                    <OutputView
+                    id={selectedNote?.id}
                     title={selectedNote?.title || topic || 'Result'}
                     content={selectedNote?.content || generatedOutput || ''}
                     isLoading={isLoading}
@@ -291,6 +305,7 @@ function Dashboard() {
                     handleSaveNote={handleSaveNote}
                     onClose={handleCloseOutput}
                     isGenerated={!selectedNote && !!generatedOutput}
+                    onTitleChange={handleTitleChange}
                   />
                 ) : (
                   <div className="h-full min-h-[400px] border-2 border-dashed border-border/60 rounded-xl flex flex-col items-center justify-center text-center p-8 text-muted-foreground bg-secondary/10">

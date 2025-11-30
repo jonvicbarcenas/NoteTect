@@ -36,4 +36,11 @@ public class NoteController {
     public void deleteNote(@PathVariable int id) {
         noteService.deleteNote(id);
     }
+
+    @PutMapping("/{id}")
+    public Note updateNote(@PathVariable int id, @RequestBody java.util.Map<String, String> payload, Authentication authentication) {
+        Integer userId = (Integer) authentication.getPrincipal();
+        String title = payload.get("title");
+        return noteService.updateNoteTitle(id, title, userId);
+    }
 }
