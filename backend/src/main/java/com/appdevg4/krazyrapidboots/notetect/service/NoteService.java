@@ -36,4 +36,17 @@ public class NoteService {
     public void deleteNote(int id) {
         noteRepository.deleteById(id);
     }
+
+    public Note updateNoteTitle(int id, String title, Integer userId) {
+        Note note = noteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Note not found with id " + id));
+
+        if (!note.getUser().getUserId().equals(userId)) {
+            // In a real app, you might throw a more specific, permission-denied exception
+            throw new RuntimeException("User not authorized to update this note.");
+        }
+
+        note.setTitle(title);
+        return noteRepository.save(note);
+    }
 }
