@@ -3,6 +3,7 @@ package com.appdevg4.krazyrapidboots.notetect.controller;
 import com.appdevg4.krazyrapidboots.notetect.entity.Subject;
 import com.appdevg4.krazyrapidboots.notetect.service.SubjectService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,8 +16,9 @@ public class SubjectController {
     private SubjectService subjectService;
 
     @GetMapping
-    public List<Subject> getAllSubjects() {
-        return subjectService.getAllSubjects();
+    public List<Subject> getAllSubjects(Authentication authentication) {
+        Integer userId = (Integer) authentication.getPrincipal();
+        return subjectService.getAllSubjectsByUserId(userId);
     }
 
     @GetMapping("/{id}")
@@ -25,8 +27,9 @@ public class SubjectController {
     }
 
     @PostMapping
-    public Subject createSubject(@RequestBody Subject subject) {
-        return subjectService.saveSubject(subject);
+    public Subject createSubject(@RequestBody Subject subject, Authentication authentication) {
+        Integer userId = (Integer) authentication.getPrincipal();
+        return subjectService.saveSubject(subject, userId);
     }
 
     @DeleteMapping("/{id}")

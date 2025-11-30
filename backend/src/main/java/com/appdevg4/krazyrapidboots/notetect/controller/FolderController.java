@@ -3,6 +3,7 @@ package com.appdevg4.krazyrapidboots.notetect.controller;
 import com.appdevg4.krazyrapidboots.notetect.entity.Folder;
 import com.appdevg4.krazyrapidboots.notetect.service.FolderService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,8 +16,9 @@ public class FolderController {
     private FolderService folderService;
 
     @GetMapping
-    public List<Folder> getAllFolders() {
-        return folderService.getAllFolders();
+    public List<Folder> getAllFolders(Authentication authentication) {
+        Integer userId = (Integer) authentication.getPrincipal();
+        return folderService.getAllFoldersByUserId(userId);
     }
 
     @GetMapping("/{id}")
@@ -25,12 +27,18 @@ public class FolderController {
     }
 
     @PostMapping
-    public Folder createFolder(@RequestBody Folder folder) {
-        return folderService.saveFolder(folder);
+    public Folder createFolder(@RequestBody Folder folder, Authentication authentication) {
+        Integer userId = (Integer) authentication.getPrincipal();
+        return folderService.saveFolder(folder, userId);
     }
 
     @DeleteMapping("/{id}")
     public void deleteFolder(@PathVariable int id) {
         folderService.deleteFolder(id);
+    }
+
+    @PutMapping("/{id}")
+    public Folder renameFolder(@PathVariable int id, @RequestBody Folder folder) {
+        return folderService.renameFolder(id, folder.getName());
     }
 }
