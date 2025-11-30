@@ -1,26 +1,60 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, Loader2, FileText, Sparkles, Menu } from 'lucide-react';
+import { Upload, Loader2, FileText, Sparkles, Menu, Save, LogOut, User } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { generateContent } from '../services/geminiService';
+import { notesService } from '../services/notes';
 import { NOTE_TYPES } from '../constants';
 import { NoteType } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 function Dashboard() {
   const [topic, setTopic] = useState('');
   const [context, setContext] = useState('');
   const [activeType, setActiveType] = useState<NoteType>(NoteType.SUMMARY);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [output, setOutput] = useState('');
   const [selectedFile, setSelectedFile] = useState<string | undefined>(undefined);
   const [fileMimeType, setFileMimeType] = useState<string | undefined>(undefined);
   const [fileName, setFileName] = useState<string | undefined>(undefined);
   const [isDragging, setIsDragging] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+
+  const handleSaveNote = async () => {
+    if (!output) return;
+    
+    setIsSaving(true);
+    setSaveMessage(null);
+    
+    try {
+      await notesService.create({
+        content: output,
+        filename: topic || 'Untitled Note',
+        createdAt: new Date().toISOString(),
+      });
+      setSaveMessage('Note saved successfully!');
+      setTimeout(() => setSaveMessage(null), 3000);
+    } catch (error) {
+      console.error('Failed to save note:', error);
+      setSaveMessage('Failed to save note');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -118,7 +152,28 @@ function Dashboard() {
           })}
         </div>
 
-        <div className="p-4 border-t border-slate-800/50">
+        <div className="p-4 border-t border-slate-800/50 space-y-3">
+          {user && (
+            <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center">
+                  <User className="w-4 h-4 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-white truncate">{user.name}</p>
+                  <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-slate-400 hover:text-white hover:bg-slate-800"
+            onClick={handleLogout}
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Sign Out
+          </Button>
           <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
             <p className="text-xs text-slate-400 text-center">
               Powered by Gemini 2.0 Flash
@@ -271,7 +326,26 @@ function Dashboard() {
                           <span className="w-2 h-6 bg-green-500 rounded-full" />
                           Generated Result
                         </CardTitle>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 items-center">
+                          {saveMessage && (
+                            <span className={`text-xs ${saveMessage.includes('success') ? 'text-green-600' : 'text-red-600'}`}>
+                              {saveMessage}
+                            </span>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs h-8"
+                            onClick={handleSaveNote}
+                            disabled={isSaving}
+                          >
+                            {isSaving ? (
+                              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                            ) : (
+                              <Save className="w-3 h-3 mr-1" />
+                            )}
+                            Save
+                          </Button>
                           <Button
                             variant="outline"
                             size="sm"

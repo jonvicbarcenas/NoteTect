@@ -1,3 +1,5 @@
+import { User, ApiError } from '../types';
+
 const API_BASE_URL = 'http://localhost:8080/api/auth';
 
 export interface SignupRequest {
@@ -11,25 +13,15 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface AuthResponse {
-  userId: number;
-  name: string;
-  email: string;
-}
-
-export interface ApiError {
-  message: string;
-  status?: number;
-}
-
 export const authService = {
-  async signup(data: SignupRequest): Promise<AuthResponse> {
+  async signup(data: SignupRequest): Promise<User> {
     try {
       const response = await fetch(`${API_BASE_URL}/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Include cookies
         body: JSON.stringify(data),
       });
 
@@ -52,13 +44,14 @@ export const authService = {
     }
   },
 
-  async login(data: LoginRequest): Promise<AuthResponse> {
+  async login(data: LoginRequest): Promise<User> {
     try {
       const response = await fetch(`${API_BASE_URL}/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Include cookies
         body: JSON.stringify(data),
       });
 
@@ -78,6 +71,35 @@ export const authService = {
       throw {
         message: 'Unable to connect to the server. Please try again later.',
       } as ApiError;
+    }
+  },
+
+  async getCurrentUser(): Promise<User | null> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/me`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        return null;
+      }
+
+      return await response.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async logout(): Promise<void> {
+    try {
+      await fetch(`${API_BASE_URL}/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      localStorage.removeItem('user');
+    } catch {
+      // Ignore errors on logout
     }
   },
 };

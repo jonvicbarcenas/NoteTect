@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label"
 import { Eye, EyeOff, Mail } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion"
-import { authService, type ApiError } from "@/services/auth"
+import { useAuth } from "@/context/AuthContext"
+import { ApiError } from "@/types"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -18,6 +19,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
+  const { login } = useAuth()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -25,12 +27,7 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const response = await authService.login({ email, password })
-      
-      // Store user data in localStorage
-      localStorage.setItem('user', JSON.stringify(response))
-      
-      // Redirect to dashboard
+      await login(email, password)
       navigate('/dashboard')
     } catch (err) {
       const apiError = err as ApiError
