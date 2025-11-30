@@ -36,4 +36,9 @@ public class AuthService {
         }
         return u;
     }
+
+    public User getUserById(Integer userId) {
+        return users.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+    }
 }
