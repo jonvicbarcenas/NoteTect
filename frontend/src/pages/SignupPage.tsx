@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label"
 import { Eye, EyeOff, CheckCircle2, Circle } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { authService, type ApiError } from "@/services/auth"
+import { useAuth } from "@/context/AuthContext"
+import { ApiError } from "@/types"
 
 export default function SignupPage() {
   const [firstName, setFirstName] = useState("")
@@ -21,6 +22,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
+  const { signup } = useAuth()
 
   // Live password requirement checks
   const hasLength = password.length >= 8
@@ -55,12 +57,7 @@ export default function SignupPage() {
 
     try {
       const name = `${firstName} ${lastName}`.trim()
-      const response = await authService.signup({ name, email, password })
-      
-      // Store user data in localStorage
-      localStorage.setItem('user', JSON.stringify(response))
-      
-      // Redirect to dashboard
+      await signup(name, email, password)
       navigate('/dashboard')
     } catch (err) {
       const apiError = err as ApiError
