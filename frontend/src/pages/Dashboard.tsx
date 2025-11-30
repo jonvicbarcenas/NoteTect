@@ -5,13 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, Loader2, FileText, Sparkles, Menu, Save } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
+import { Upload, Loader2, FileText, Sparkles, Menu } from 'lucide-react';
 import { generateContent } from '../services/geminiService';
 import { notesService } from '../services/notes';
-import { NoteType } from '../types';
+import { Note, NoteType } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { Sidebar, GenerationTools } from '../components/dashboard';
+import OutputView from '../components/dashboard/OutputView';
 
 function Dashboard() {
   const [topic, setTopic] = useState('');
@@ -19,12 +19,14 @@ function Dashboard() {
   const [activeType, setActiveType] = useState<NoteType>(NoteType.SUMMARY);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [output, setOutput] = useState('');
+  const [generatedOutput, setGeneratedOutput] = useState<string | null>(null);
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [selectedFile, setSelectedFile] = useState<string | undefined>(undefined);
   const [fileMimeType, setFileMimeType] = useState<string | undefined>(undefined);
   const [fileName, setFileName] = useState<string | undefined>(undefined);
   const [isDragging, setIsDragging] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [notesRefreshTrigger, setNotesRefreshTrigger] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -35,18 +37,20 @@ function Dashboard() {
   };
 
   const handleSaveNote = async () => {
-    if (!output) return;
-    
+    if (!generatedOutput) return;
+
     setIsSaving(true);
     setSaveMessage(null);
-    
+
     try {
       await notesService.create({
-        content: output,
-        filename: topic || 'Untitled Note',
+        content: generatedOutput,
+        filename: fileName || 'Untitled Note',
+        title: topic,
         createdAt: new Date().toISOString(),
       });
       setSaveMessage('Note saved successfully!');
+      setNotesRefreshTrigger(prev => prev + 1);
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (error) {
       console.error('Failed to save note:', error);
@@ -54,6 +58,22 @@ function Dashboard() {
     } finally {
       setIsSaving(false);
     }
+  };
+  
+  const handleNoteSelect = (note: Note) => {
+    setSelectedNote(note);
+    setGeneratedOutput(null);
+    setTopic('');
+    setContext('');
+    setSelectedFile(undefined);
+    setFileName(undefined);
+  };
+  
+  const handleCloseOutput = () => {
+    setSelectedNote(null);
+    setGeneratedOutput(null);
+    setIsLoading(false);
+    // Keep topic/context so user doesn't lose their work
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -92,10 +112,11 @@ function Dashboard() {
 
   const onGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!topic && !context) return;
+    if (!topic && !context && !selectedFile) return;
 
     setIsLoading(true);
-    setOutput('');
+    setGeneratedOutput('');
+    setSelectedNote(null);
 
     try {
       const prompt = `Topic: ${topic}\nContext: ${context}`;
@@ -105,20 +126,23 @@ function Dashboard() {
         imageBase64: selectedFile,
         imageMimeType: fileMimeType
       }, (chunk) => {
-        setOutput(chunk);
+        setGeneratedOutput(prev => (prev || '') + chunk);
       });
     } catch (error) {
       console.error(error);
-      setOutput('Error generating content. Please check your API key in .env file.');
+      setGeneratedOutput('Error generating content. Please check your API key in .env file.');
     } finally {
       setIsLoading(false);
     }
   };
+  
+  const showInputForm = !isLoading && !selectedNote && !generatedOutput;
+  const showOutput = isLoading || selectedNote || generatedOutput;
 
   return (
     <div className="min-h-screen bg-background flex font-sans text-foreground">
       {/* Sidebar */}
-      <Sidebar user={user} onLogout={handleLogout} />
+      <Sidebar user={user} onLogout={handleLogout} refreshTrigger={notesRefreshTrigger} onNoteSelect={handleNoteSelect} />
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden bg-secondary/30">
@@ -139,16 +163,21 @@ function Dashboard() {
           <div className="max-w-7xl mx-auto space-y-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-bold tracking-tight text-foreground">Create New Note</h1>
+                <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                  {showInputForm ? 'Create New Note' : (selectedNote ? 'Viewing Note' : 'Generated Note')}
+                </h1>
                 <p className="text-muted-foreground mt-1">
-                  Select a tool and let AI generate comprehensive notes for you.
+                  {showInputForm 
+                    ? 'Select a tool and let AI generate comprehensive notes for you.'
+                    : (selectedNote ? `Viewing "${selectedNote.title}" created on ${new Date(selectedNote.createdAt).toLocaleDateString()}` : 'Review your newly generated content.')
+                  }
                 </p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative">
               {/* Input Section */}
-              {(!output && !isLoading) && (
+              {showInputForm && (
                 <div className="lg:col-span-5 space-y-6 animate-in fade-in slide-in-from-left-4 duration-500">
                   <Card className="border-border/50 shadow-xl shadow-black/5 overflow-hidden">
                     <CardHeader className="bg-card border-b border-border/50 pb-4">
@@ -169,7 +198,7 @@ function Dashboard() {
                           <Label htmlFor="topic" className="text-sm font-medium">Topic / Title</Label>
                           <Input
                             id="topic"
-                            placeholder="e.g., Photosynthesis, World War II, Project Management"
+                            placeholder="e.g., Photosynthesis, World War II"
                             value={topic}
                             onChange={(e) => setTopic(e.target.value)}
                             className="h-11 bg-secondary/30 border-border focus:ring-2 focus:ring-primary/20 transition-all"
@@ -180,19 +209,17 @@ function Dashboard() {
                           <Label htmlFor="context" className="text-sm font-medium">Context & Instructions</Label>
                           <Textarea
                             id="context"
-                            placeholder="Paste text content here, or add specific instructions for the AI..."
+                            placeholder="Paste text, or add instructions..."
                             className="min-h-[150px] bg-secondary/30 border-border focus:ring-2 focus:ring-primary/20 transition-all resize-none"
                             value={context}
-                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                              setContext(e.target.value)
-                            }
+                            onChange={(e) => setContext(e.target.value)}
                           />
                         </div>
 
                         <div
                           className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 group ${isDragging
-                              ? 'border-primary bg-primary/5 scale-[0.99]'
-                              : 'border-border hover:border-primary/50 hover:bg-secondary/50'
+                            ? 'border-primary bg-primary/5 scale-[0.99]'
+                            : 'border-border hover:border-primary/50 hover:bg-secondary/50'
                             }`}
                           onClick={() => fileInputRef.current?.click()}
                           onDragOver={handleDragOver}
@@ -218,7 +245,7 @@ function Dashboard() {
                                     {isDragging ? 'Drop file now' : 'Click to upload or drag & drop'}
                                   </p>
                                   <p className="text-xs text-muted-foreground mt-1">
-                                    PDF, DOCX, TXT, Images (max 10MB)
+                                    Images, PDF, DOCX, TXT (max 10MB)
                                   </p>
                                 </div>
                               </>
@@ -240,16 +267,11 @@ function Dashboard() {
                           disabled={isLoading}
                         >
                           {isLoading ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Generating Note...
-                            </>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           ) : (
-                            <>
-                              <Sparkles className="mr-2 h-4 w-4" />
-                              Generate Note
-                            </>
+                            <Sparkles className="mr-2 h-4 w-4" />
                           )}
+                          Generate Note
                         </Button>
                       </CardFooter>
                     </form>
@@ -258,79 +280,18 @@ function Dashboard() {
               )}
 
               {/* Output Section */}
-              <div className={`${(!output && !isLoading) ? 'lg:col-span-7' : 'lg:col-span-12'} h-full transition-all duration-500 ease-in-out`}>
-                {(output || isLoading) ? (
-                  <Card className="h-full min-h-[80vh] border-border/50 shadow-xl shadow-black/5 flex flex-col animate-in fade-in zoom-in-95 duration-500">
-                    <CardHeader className="bg-card border-b border-border/50 pb-4 sticky top-0 z-10">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="flex items-center gap-2">
-                          <span className="w-2 h-6 bg-green-500 rounded-full" />
-                          Generated Result
-                        </CardTitle>
-                        <div className="flex gap-2 items-center">
-                          {saveMessage && (
-                            <span className={`text-xs ${saveMessage.includes('success') ? 'text-green-600' : 'text-red-600'}`}>
-                              {saveMessage}
-                            </span>
-                          )}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-xs h-8"
-                            onClick={handleSaveNote}
-                            disabled={isSaving}
-                          >
-                            {isSaving ? (
-                              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                            ) : (
-                              <Save className="w-3 h-3 mr-1" />
-                            )}
-                            Save
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-xs h-8"
-                            onClick={() => {
-                              navigator.clipboard.writeText(output);
-                            }}
-                          >
-                            Copy
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-xs h-8"
-                            onClick={() => {
-                              const blob = new Blob([output], { type: 'text/plain' });
-                              const url = URL.createObjectURL(blob);
-                              const a = document.createElement('a');
-                              a.href = url;
-                              a.download = `${topic.replace(/\s+/g, '_') || 'generated_note'}.txt`;
-                              document.body.appendChild(a);
-                              a.click();
-                              document.body.removeChild(a);
-                              URL.revokeObjectURL(url);
-                            }}
-                          >
-                            Download
-                          </Button>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="flex-1 overflow-y-auto p-6 md:p-12 bg-white/50 dark:bg-black/20">
-                      {isLoading ? (
-                        <div className="flex flex-col items-center justify-center h-full space-y-4">
-                          <Loader2 className="w-12 h-12 animate-spin text-primary" />
-                          <p className="text-lg font-medium text-muted-foreground animate-pulse">Generating your note...</p>
-                        </div>
-                      ) : (
-                        <div className="prose prose-slate dark:prose-invert max-w-4xl mx-auto prose-headings:font-bold prose-h1:text-3xl prose-h2:text-2xl prose-p:text-lg prose-p:leading-relaxed prose-li:text-lg">
-                          <ReactMarkdown>{output}</ReactMarkdown>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+              <div className={`${showInputForm ? 'lg:col-span-7' : 'lg:col-span-12'} h-full transition-all duration-500 ease-in-out`}>
+                {showOutput ? (
+                   <OutputView
+                    title={selectedNote?.title || topic || 'Result'}
+                    content={selectedNote?.content || generatedOutput || ''}
+                    isLoading={isLoading}
+                    isSaving={isSaving}
+                    saveMessage={saveMessage}
+                    handleSaveNote={handleSaveNote}
+                    onClose={handleCloseOutput}
+                    isGenerated={!selectedNote && !!generatedOutput}
+                  />
                 ) : (
                   <div className="h-full min-h-[400px] border-2 border-dashed border-border/60 rounded-xl flex flex-col items-center justify-center text-center p-8 text-muted-foreground bg-secondary/10">
                     <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mb-4">
@@ -345,18 +306,15 @@ function Dashboard() {
               </div>
 
               {/* Floating Action Button */}
-              {(output && !isLoading) && (
+              {showOutput && !isLoading && (
                 <div className="fixed bottom-8 right-8 animate-in fade-in slide-in-from-bottom-4 duration-500 z-50">
                   <Button
                     size="lg"
                     className="rounded-full shadow-2xl shadow-primary/30 h-14 px-6 text-base font-semibold"
-                    onClick={() => {
-                      setOutput('');
-                      setIsLoading(false);
-                    }}
+                    onClick={handleCloseOutput}
                   >
                     <Sparkles className="mr-2 h-5 w-5" />
-                    Generate New Note
+                    Create New Note
                   </Button>
                 </div>
               )}
