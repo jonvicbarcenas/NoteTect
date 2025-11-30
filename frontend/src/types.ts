@@ -27,6 +27,7 @@ export interface Folder {
 export interface Note {
     id: number;
     content: string;
+    title: string;
     filename: string;
     createdAt: string;
     folder?: Folder;
@@ -43,6 +44,7 @@ export interface GenerateNoteParams {
 
 export interface CreateNoteRequest {
     content: string;
+    title: string;
     filename: string;
     createdAt: string;
     folder?: { id: number };
