@@ -2,7 +2,6 @@
 export enum NoteType {
     SUMMARY = 'SUMMARY',
     STUDY_GUIDE = 'STUDY_GUIDE',
-    FLASHCARDS = 'FLASHCARDS',
     SIMPLIFY = 'SIMPLIFY',
     ACTION_ITEMS = 'ACTION_ITEMS'
 }
