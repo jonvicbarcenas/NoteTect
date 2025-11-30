@@ -9,9 +9,12 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class AuthService {
     private final UserRepository users;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
-    public AuthService(UserRepository users) {
+    public AuthService(UserRepository users,
+            org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
         this.users = users;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public User signup(String name, String email, String rawPassword) {
@@ -21,14 +24,14 @@ public class AuthService {
         User u = new User();
         u.setName(name);
         u.setEmail(email);
-        u.setPassword(rawPassword);
+        u.setPassword(passwordEncoder.encode(rawPassword));
         return users.save(u);
     }
 
     public User login(String email, String rawPassword) {
         User u = users.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
-        if (!rawPassword.equals(u.getPassword())) {
+        if (!passwordEncoder.matches(rawPassword, u.getPassword())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
         }
         return u;
