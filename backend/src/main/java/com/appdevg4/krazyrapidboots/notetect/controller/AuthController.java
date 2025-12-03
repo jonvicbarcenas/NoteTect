@@ -39,6 +39,15 @@ public class AuthController {
         public String email;
     }
 
+    public static class UpdateNameRequest {
+        public String name;
+    }
+
+    public static class UpdatePasswordRequest {
+        public String currentPassword;
+        public String newPassword;
+    }
+
     @PostMapping("/signup")
     public ResponseEntity<AuthResponse> signup(@RequestBody SignupRequest req, HttpServletResponse response) {
         User u = auth.signup(req.name, req.email, req.password);
@@ -89,6 +98,30 @@ public class AuthController {
     public ResponseEntity<Void> logout(HttpServletResponse response) {
         clearJwtCookie(response);
         return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/update-name")
+    public ResponseEntity<AuthResponse> updateName(@RequestBody UpdateNameRequest req, Authentication authentication) {
+        Integer userId = (Integer) authentication.getPrincipal();
+        User u = auth.updateName(userId, req.name);
+
+        AuthResponse resp = new AuthResponse();
+        resp.userId = u.getUserId();
+        resp.name = u.getName();
+        resp.email = u.getEmail();
+        return ResponseEntity.ok(resp);
+    }
+
+    @PutMapping("/update-password")
+    public ResponseEntity<AuthResponse> updatePassword(@RequestBody UpdatePasswordRequest req, Authentication authentication) {
+        Integer userId = (Integer) authentication.getPrincipal();
+        User u = auth.updatePassword(userId, req.currentPassword, req.newPassword);
+
+        AuthResponse resp = new AuthResponse();
+        resp.userId = u.getUserId();
+        resp.name = u.getName();
+        resp.email = u.getEmail();
+        return ResponseEntity.ok(resp);
     }
 
     private void setJwtCookie(HttpServletResponse response, String token) {
