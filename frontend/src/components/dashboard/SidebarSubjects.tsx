@@ -1,23 +1,41 @@
 import { useState, useEffect } from 'react';
-import { BookOpen, Plus, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
+import { BookOpen, Plus, Trash2, ChevronDown, ChevronRight, Pencil } from 'lucide-react';
 import { subjectsService } from '../../services/subjects';
-import { Subject } from '../../types';
-// Import the component that displays the folders
-import SidebarFolders from './SidebarFolders'; 
+import { foldersService } from '../../services/folders';
+import { notesService } from '../../services/notes';
+import { Subject, Note, Folder } from '../../types';
+import SidebarFolders from './SidebarFolders';
+import DeleteConfirmDialog from './DeleteConfirmDialog';
 
 interface SidebarSubjectsProps {
     refreshTrigger?: number;
-    // Handler now accepts Subject OR null (for deselection)
     onSubjectSelect: (subject: Subject | null) => void; 
-    selectedSubject: Subject | null; // Prop for visual highlighting and nesting logic
+    selectedSubject: Subject | null;
+    onNoteSelect?: (note: Note) => void;
 }
 
-function SidebarSubjects({ refreshTrigger = 0, onSubjectSelect, selectedSubject }: SidebarSubjectsProps) {
+interface DeleteDialogState {
+    isOpen: boolean;
+    subject: Subject | null;
+    foldersCount: number;
+    notesCount: number;
+}
+
+function SidebarSubjects({ refreshTrigger = 0, onSubjectSelect, selectedSubject, onNoteSelect }: SidebarSubjectsProps) {
     const [subjects, setSubjects] = useState<Subject[]>([]);
-    const [isSubjectsExpanded, setIsSubjectsExpanded] = useState(true); // Renamed for clarity
+    const [isSubjectsExpanded, setIsSubjectsExpanded] = useState(true);
     const [isAdding, setIsAdding] = useState(false);
     const [newSubjectName, setNewSubjectName] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [editingId, setEditingId] = useState<number | null>(null);
+    const [editingName, setEditingName] = useState('');
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [deleteDialog, setDeleteDialog] = useState<DeleteDialogState>({
+        isOpen: false,
+        subject: null,
+        foldersCount: 0,
+        notesCount: 0,
+    });
 
     useEffect(() => {
         loadSubjects();
@@ -50,16 +68,75 @@ function SidebarSubjects({ refreshTrigger = 0, onSubjectSelect, selectedSubject 
         }
     };
 
-    const handleDeleteSubject = async (e: React.MouseEvent, id: number) => {
-        e.stopPropagation(); 
+    const handleDeleteClick = async (e: React.MouseEvent, subject: Subject) => {
+        e.stopPropagation();
+        
         try {
-            await subjectsService.delete(id);
-            setSubjects(subjects.filter(s => s.id !== id));
-            if (selectedSubject && selectedSubject.id === id) {
+            // Fetch folders for this subject
+            const folders = await foldersService.getBySubject(subject.id);
+            
+            // Count total notes across all folders
+            let totalNotes = 0;
+            for (const folder of folders) {
+                const notes = await notesService.getByFolder(folder.id);
+                totalNotes += notes.length;
+            }
+            
+            setDeleteDialog({
+                isOpen: true,
+                subject,
+                foldersCount: folders.length,
+                notesCount: totalNotes,
+            });
+        } catch (error) {
+            console.error('Failed to fetch subject contents:', error);
+            // Still show dialog even if we can't get counts
+            setDeleteDialog({
+                isOpen: true,
+                subject,
+                foldersCount: 0,
+                notesCount: 0,
+            });
+        }
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!deleteDialog.subject) return;
+        
+        setIsDeleting(true);
+        try {
+            await subjectsService.delete(deleteDialog.subject.id);
+            setSubjects(subjects.filter(s => s.id !== deleteDialog.subject!.id));
+            if (selectedSubject && selectedSubject.id === deleteDialog.subject.id) {
                 onSubjectSelect(null); 
             }
+            setDeleteDialog({ isOpen: false, subject: null, foldersCount: 0, notesCount: 0 });
         } catch (error) {
             console.error('Failed to delete subject:', error);
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    const handleCancelDelete = () => {
+        setDeleteDialog({ isOpen: false, subject: null, foldersCount: 0, notesCount: 0 });
+    };
+
+    const handleRenameSubject = async (id: number) => {
+        if (!editingName.trim()) {
+            setEditingId(null);
+            return;
+        }
+        try {
+            // Note: You may need to add a rename/update method to subjectsService
+            const updated = await subjectsService.update(id, editingName.trim());
+            setSubjects(subjects.map(s => s.id === id ? updated : s));
+            setEditingId(null);
+            setEditingName('');
+        } catch (error) {
+            console.error('Failed to rename subject:', error);
+            setEditingId(null);
+            setEditingName('');
         }
     };
 
@@ -118,35 +195,64 @@ function SidebarSubjects({ refreshTrigger = 0, onSubjectSelect, selectedSubject 
                             <div key={subject.id}>
                                 {/* Subject Item */}
                                 <div
-                                    // Apply conditional styling for selection
                                     className={`group flex items-center justify-between gap-2 px-4 py-2 rounded-lg text-sm transition-colors cursor-pointer ${
                                         selectedSubject?.id === subject.id
-                                            ? 'bg-indigo-900 text-white' // Active style
-                                            : 'text-slate-400 hover:bg-slate-800 hover:text-white' // Default style
+                                            ? 'bg-indigo-900 text-white'
+                                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                                     }`}
-                                    // Handle selection (toggle on/off)
-                                    onClick={() => onSubjectSelect(selectedSubject?.id === subject.id ? null : subject)}
+                                    onClick={() => {
+                                        if (editingId !== subject.id) {
+                                            onSubjectSelect(selectedSubject?.id === subject.id ? null : subject);
+                                        }
+                                    }}
                                 >
                                     <span className="flex items-center gap-2 flex-1 truncate">
                                         <BookOpen 
-                                            className={`w-4 h-4 ${selectedSubject?.id === subject.id ? 'text-indigo-300' : 'text-slate-500 group-hover:text-indigo-400'}`} 
+                                            className={`w-4 h-4 flex-shrink-0 ${selectedSubject?.id === subject.id ? 'text-indigo-300' : 'text-slate-500 group-hover:text-indigo-400'}`} 
                                         />
-                                        {subject.name}
+                                        {editingId === subject.id ? (
+                                            <input
+                                                type="text"
+                                                value={editingName}
+                                                onChange={(e) => setEditingName(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    e.stopPropagation();
+                                                    if (e.key === 'Enter') handleRenameSubject(subject.id);
+                                                    if (e.key === 'Escape') {
+                                                        setEditingId(null);
+                                                        setEditingName('');
+                                                    }
+                                                }}
+                                                onBlur={() => handleRenameSubject(subject.id)}
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="flex-1 bg-slate-800 border border-slate-700 rounded px-2 py-0.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+                                                autoFocus
+                                            />
+                                        ) : (
+                                            <span className="truncate">{subject.name}</span>
+                                        )}
                                     </span>
-                                    <Trash2
-                                        className="w-4 h-4 cursor-pointer text-slate-400 hover:text-red-400"
+                                    <Pencil
+                                        className="w-3 h-3 opacity-0 group-hover:opacity-100 text-slate-500 hover:text-indigo-400 transition-opacity cursor-pointer flex-shrink-0"
                                         onClick={(e) => {
-                                            handleDeleteSubject(e, subject.id);
+                                            e.stopPropagation();
+                                            setEditingId(subject.id);
+                                            setEditingName(subject.name);
                                         }}
+                                    />
+                                    <Trash2
+                                        className="w-3 h-3 opacity-0 group-hover:opacity-100 text-slate-500 hover:text-red-400 transition-opacity cursor-pointer flex-shrink-0"
+                                        onClick={(e) => handleDeleteClick(e, subject)}
                                     />
                                 </div>
                                 
-                                {/* 2. Conditional Rendering for Nested Folders */}
+                                {/* Nested Folders with Notes */}
                                 {selectedSubject?.id === subject.id && (
                                     <div className="pl-4 pt-1 pb-2">
                                         <SidebarFolders 
-                                            // Pass the ID of the selected subject
                                             subjectId={subject.id}
+                                            refreshTrigger={refreshTrigger}
+                                            onNoteSelect={onNoteSelect}
                                         />
                                     </div>
                                 )}
@@ -155,6 +261,19 @@ function SidebarSubjects({ refreshTrigger = 0, onSubjectSelect, selectedSubject 
                     )}
                 </div>
             )}
+
+            {/* Delete Confirmation Dialog */}
+            <DeleteConfirmDialog
+                isOpen={deleteDialog.isOpen}
+                onClose={handleCancelDelete}
+                onConfirm={handleConfirmDelete}
+                title="Delete Subject"
+                itemType="subject"
+                itemName={deleteDialog.subject?.name || ''}
+                childFoldersCount={deleteDialog.foldersCount}
+                childNotesCount={deleteDialog.notesCount}
+                isDeleting={isDeleting}
+            />
         </div>
     );
 }
