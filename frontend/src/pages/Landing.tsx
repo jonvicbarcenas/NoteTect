@@ -1,8 +1,11 @@
 import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Zap, BookOpen, Sparkles } from "lucide-react"
+import { Zap, BookOpen, Sparkles } from "lucide-react"
+import { useAuth } from "@/context/AuthContext"
 
 export default function Landing() {
+  const { user, loading } = useAuth()
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white">
       {/* Header */}
@@ -25,12 +28,22 @@ export default function Landing() {
           </nav>
 
           <div className="flex items-center gap-4">
-            <Link to="/login" className="text-slate-300 hover:text-white transition-colors text-sm">
-              Log In
-            </Link>
-            <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6">
-              <Link to="/signup">Sign Up</Link>
-            </Button>
+            {loading ? (
+              <div className="w-20 h-8 bg-slate-700/50 rounded-full animate-pulse" />
+            ) : user ? (
+              <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6">
+                <Link to="/dashboard">Go to Dashboard</Link>
+              </Button>
+            ) : (
+              <>
+                <Link to="/login" className="text-slate-300 hover:text-white transition-colors text-sm">
+                  Log In
+                </Link>
+                <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6">
+                  <Link to="/signup">Sign Up</Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -132,24 +145,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center space-y-8 bg-gradient-to-r from-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-12">
-          <h2 className="text-4xl md:text-5xl font-bold">Ready to Transform Your Notes?</h2>
-          <p className="text-xl text-slate-400 max-w-2xl mx-auto">
-            Start generating perfect notes in seconds. No credit card required.
-          </p>
-          <Button
-            asChild
-            className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-8 py-6 text-lg font-medium mx-auto flex items-center gap-2 group"
-          >
-            <Link to="/signup">
-              Get Started Free
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </Button>
-        </div>
-      </section>
 
       {/* Footer */}
       <footer className="border-t border-slate-700 py-8 px-6">
