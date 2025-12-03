@@ -41,4 +41,22 @@ public class AuthService {
         return users.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     }
+
+    public User updateName(Integer userId, String newName) {
+        User u = getUserById(userId);
+        u.setName(newName);
+        return users.save(u);
+    }
+
+    public User updatePassword(Integer userId, String currentPassword, String newPassword) {
+        User u = getUserById(userId);
+        
+        // Verify current password
+        if (!passwordEncoder.matches(currentPassword, u.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Current password is incorrect");
+        }
+        
+        u.setPassword(passwordEncoder.encode(newPassword));
+        return users.save(u);
+    }
 }
