@@ -36,4 +36,16 @@ public class SubjectService {
     public void deleteSubject(int id) {
         subjectRepository.deleteById(id);
     }
+
+    public Subject updateSubjectName(int id, String name, Integer userId) {
+        Subject subject = subjectRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Subject not found with id " + id));
+
+        if (!subject.getUser().getUserId().equals(userId)) {
+            throw new RuntimeException("User not authorized to update this subject.");
+        }
+
+        subject.setName(name);
+        return subjectRepository.save(subject);
+    }
 }
