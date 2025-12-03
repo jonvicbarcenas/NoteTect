@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
+import { LightRays } from "@/components/ui/light-rays"
 import { Zap, BookOpen, Sparkles } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
 
@@ -49,7 +50,17 @@ export default function Landing() {
       </header>
 
       {/* Hero Section */}
-      <section className="min-h-screen flex items-center justify-center px-6 py-20 relative overflow-hidden">
+      <section className="min-h-screen flex items-center justify-center px-6 py-20 relative overflow-hidden -mt-[72px] pt-[72px]">
+        {/* Light Rays Effect */}
+        <LightRays 
+          color="rgba(139, 92, 246, 0.15)" 
+          count={8} 
+          blur={40} 
+          speed={16}
+          length="100vh"
+          className="top-0"
+        />
+        
         {/* Background gradient orbs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
