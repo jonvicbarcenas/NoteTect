@@ -8,5 +8,9 @@ import java.util.List;
 
 @Repository
 public interface NoteRepository extends JpaRepository<Note, Integer> {
+    // Find all notes by user
     List<Note> findByUserUserId(Integer userId);
+
+    // Find all notes in a specific folder
+    List<Note> findByFolderId(Integer folderId);
 }

@@ -1,11 +1,8 @@
 package com.appdevg4.krazyrapidboots.notetect.entity;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import jakarta.persistence.Id;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
-import lombok.AllArgsConstructor;
 import jakarta.persistence.Column;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.JoinColumn;
@@ -13,9 +10,6 @@ import jakarta.persistence.Entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Note {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,13 +34,43 @@ public class Note {
     @JsonIgnore
     private User user;
 
-    // The folder this note belongs to
+    // The folder this note belongs to (User → Subject → Folder → Note hierarchy)
     @ManyToOne
     @JoinColumn(name = "folder_id")
     private Folder folder;
 
-    // The subject assigned by the user (can be anything)
-    @ManyToOne
-    @JoinColumn(name = "subject_id")
-    private Subject subject;
+    // Constructors
+    public Note() {}
+
+    public Note(int id, String content, String title, String filename, String createdAt, User user, Folder folder) {
+        this.id = id;
+        this.content = content;
+        this.title = title;
+        this.filename = filename;
+        this.createdAt = createdAt;
+        this.user = user;
+        this.folder = folder;
+    }
+
+    // Getters and Setters
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
+
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+
+    public String getFilename() { return filename; }
+    public void setFilename(String filename) { this.filename = filename; }
+
+    public String getCreatedAt() { return createdAt; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+
+    public Folder getFolder() { return folder; }
+    public void setFolder(Folder folder) { this.folder = folder; }
 }

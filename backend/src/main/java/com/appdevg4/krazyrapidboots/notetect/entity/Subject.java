@@ -1,8 +1,5 @@
 package com.appdevg4.krazyrapidboots.notetect.entity;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 import java.util.List;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -15,9 +12,6 @@ import jakarta.persistence.CascadeType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Subject {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,8 +26,31 @@ public class Subject {
     @JsonIgnore
     private User user;
 
-    // A subject can have many notes assigned to it
+    // A subject can contain many folders
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL)
     @JsonIgnore
-    private List<Note> notes;
+    private List<Folder> folders;
+
+    // Constructors
+    public Subject() {}
+
+    public Subject(int id, String name, User user, List<Folder> folders) {
+        this.id = id;
+        this.name = name;
+        this.user = user;
+        this.folders = folders;
+    }
+
+    // Getters and Setters
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+
+    public List<Folder> getFolders() { return folders; }
+    public void setFolders(List<Folder> folders) { this.folders = folders; }
 }
