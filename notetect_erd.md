@@ -87,11 +87,11 @@ This ERD represents the database structure for NoteTect, an AI-powered note-taki
 
 ```mermaid
 erDiagram
-    User ||--o{ Folder : creates
     User ||--o{ Subject : creates
-    User ||--o{ Note : creates
+    Subject ||--o{ Folder : contains
     Folder ||--o{ Note : contains
-    Subject ||--o{ Note : categorizes
+    
+    User ||--o{ Note : creates
 
     User {
         int user_id PK
@@ -100,16 +100,16 @@ erDiagram
         string password
     }
 
-    Folder {
+    Subject {
         int id PK
         string name
         int user_id FK
     }
 
-    Subject {
+    Folder {
         int id PK
         string name
-        int user_id FK
+        int subject_id FK
     }
 
     Note {
@@ -119,7 +119,6 @@ erDiagram
         string filename
         string created_at
         int folder_id FK
-        int subject_id FK
         int user_id FK
     }
 ```
@@ -139,44 +138,40 @@ classDiagram
         +updateProfile() void
     }
 
-    class Note {
-        -Int note_id
-        -Int user_id
-        -Int folder_id
+    class Subject {
         -Int subject_id
-        -String title
-        -String content
-        -String filename
-        -DateTime created_at
-        +assignSubject(subject : Subject) void
-        +getNoteDetails() String
-        +deleteNote(note_id : int) void
-        +viewNotes() List~Note~
+        -Int user_id
+        -String name
+        +addFolder(folder : Folder) void
+        +viewFolders() List~Folder~
     }
 
     class Folder {
         -Int folder_id
-        -Int user_id
+        -Int subject_id
         -String name
         +addNote(note : Note) void
         +viewNotes() List~Note~
         +renameFolder(newName : String) void
     }
 
-
-    class Subject {
-        -Int subject_id
+    class Note {
+        -Int note_id
         -Int user_id
-        -String name
-        +addNote(note : Note) void
-        +viewNotes() List~Note~
+        -Int folder_id
+        -String title
+        -String content
+        -String filename
+        -DateTime created_at
+        +getNoteDetails() String
+        +deleteNote(note_id : int) void
     }
 
-    %% Associations with multiplicities
-    User "1" --> "0..*" Note : creates
-    User "1" --> "0..*" Folder : owns
+    %% Associations
     User "1" --> "0..*" Subject : creates
+    Subject "1" --> "0..*" Folder : contains
     Folder "1" --> "0..*" Note : contains
-    Subject "1" --> "0..*" Note : categorizes
+    User "1" --> "0..*" Note : creates
+
 ```
 
