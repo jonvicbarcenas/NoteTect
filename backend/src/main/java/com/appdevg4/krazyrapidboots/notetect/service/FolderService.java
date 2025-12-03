@@ -1,14 +1,15 @@
 package com.appdevg4.krazyrapidboots.notetect.service;
 
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.appdevg4.krazyrapidboots.notetect.entity.Folder;
 import com.appdevg4.krazyrapidboots.notetect.entity.User;
 import com.appdevg4.krazyrapidboots.notetect.repository.FolderRepository;
 import com.appdevg4.krazyrapidboots.notetect.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class FolderService {
