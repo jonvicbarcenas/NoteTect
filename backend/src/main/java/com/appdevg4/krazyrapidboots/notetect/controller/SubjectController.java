@@ -36,4 +36,11 @@ public class SubjectController {
     public void deleteSubject(@PathVariable int id) {
         subjectService.deleteSubject(id);
     }
+
+    @PutMapping("/{id}")
+    public Subject updateSubject(@PathVariable int id, @RequestBody java.util.Map<String, String> payload, Authentication authentication) {
+        Integer userId = (Integer) authentication.getPrincipal();
+        String name = payload.get("name");
+        return subjectService.updateSubjectName(id, name, userId);
+    }
 }
