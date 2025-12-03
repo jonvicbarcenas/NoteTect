@@ -15,10 +15,17 @@ public class FolderController {
     @Autowired
     private FolderService folderService;
 
+    // Get all folders for the authenticated user (through subject relationship)
     @GetMapping
     public List<Folder> getAllFolders(Authentication authentication) {
         Integer userId = (Integer) authentication.getPrincipal();
         return folderService.getAllFoldersByUserId(userId);
+    }
+
+    // Get all folders for a specific subject
+    @GetMapping("/subject/{subjectId}")
+    public List<Folder> getFoldersBySubject(@PathVariable Integer subjectId) {
+        return folderService.getAllFoldersBySubjectId(subjectId);
     }
 
     @GetMapping("/{id}")
@@ -26,10 +33,10 @@ public class FolderController {
         return folderService.getFolderById(id);
     }
 
+    // Create folder with subjectId parameter
     @PostMapping
-    public Folder createFolder(@RequestBody Folder folder, Authentication authentication) {
-        Integer userId = (Integer) authentication.getPrincipal();
-        return folderService.saveFolder(folder, userId);
+    public Folder createFolder(@RequestBody Folder folder, @RequestParam Integer subjectId) {
+        return folderService.saveFolder(folder, subjectId);
     }
 
     @DeleteMapping("/{id}")

@@ -21,14 +21,25 @@ public class NoteController {
         return noteService.getAllNotesByUserId(userId);
     }
 
+    // Get all notes in a specific folder
+    @GetMapping("/folder/{folderId}")
+    public List<Note> getNotesByFolder(@PathVariable Integer folderId) {
+        return noteService.getAllNotesByFolderId(folderId);
+    }
+
     @GetMapping("/{id}")
     public Optional<Note> getNoteById(@PathVariable int id) {
         return noteService.getNoteById(id);
     }
 
     @PostMapping
-    public Note createNote(@RequestBody Note note, Authentication authentication) {
+    public Note createNote(@RequestBody Note note, 
+                          @RequestParam(required = false) Integer folderId,
+                          Authentication authentication) {
         Integer userId = (Integer) authentication.getPrincipal();
+        if (folderId != null) {
+            return noteService.saveNoteWithFolder(note, userId, folderId);
+        }
         return noteService.saveNote(note, userId);
     }
 
@@ -42,5 +53,14 @@ public class NoteController {
         Integer userId = (Integer) authentication.getPrincipal();
         String title = payload.get("title");
         return noteService.updateNoteTitle(id, title, userId);
+    }
+
+    // Move note to a different folder
+    @PutMapping("/{id}/move")
+    public Note moveNote(@PathVariable int id, 
+                        @RequestParam(required = false) Integer folderId,
+                        Authentication authentication) {
+        Integer userId = (Integer) authentication.getPrincipal();
+        return noteService.moveNoteToFolder(id, folderId, userId);
     }
 }

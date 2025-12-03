@@ -7,9 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.appdevg4.krazyrapidboots.notetect.entity.Folder;
-import com.appdevg4.krazyrapidboots.notetect.entity.User;
+import com.appdevg4.krazyrapidboots.notetect.entity.Subject;
 import com.appdevg4.krazyrapidboots.notetect.repository.FolderRepository;
-import com.appdevg4.krazyrapidboots.notetect.repository.UserRepository;
+import com.appdevg4.krazyrapidboots.notetect.repository.SubjectRepository;
 
 @Service
 public class FolderService {
@@ -17,20 +17,27 @@ public class FolderService {
     private FolderRepository folderRepository;
 
     @Autowired
-    private UserRepository userRepository;
+    private SubjectRepository subjectRepository;
 
+    // Get all folders for a user (through subject relationship)
     public List<Folder> getAllFoldersByUserId(Integer userId) {
-        return folderRepository.findByUserUserId(userId);
+        return folderRepository.findByUserId(userId);
+    }
+
+    // Get all folders for a specific subject
+    public List<Folder> getAllFoldersBySubjectId(Integer subjectId) {
+        return folderRepository.findBySubjectId(subjectId);
     }
 
     public Optional<Folder> getFolderById(int id) {
         return folderRepository.findById(id);
     }
 
-    public Folder saveFolder(Folder folder, Integer userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        folder.setUser(user);
+    // Save folder with subject association
+    public Folder saveFolder(Folder folder, Integer subjectId) {
+        Subject subject = subjectRepository.findById(subjectId)
+                .orElseThrow(() -> new RuntimeException("Subject not found"));
+        folder.setSubject(subject);
         return folderRepository.save(folder);
     }
 
