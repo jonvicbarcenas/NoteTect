@@ -39,18 +39,7 @@ export default function Landing() {
             Transform any topic into comprehensive, well-structured notes with our AI-powered generator
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
-            <Button className="bg-white text-blue-900 hover:bg-gray-100 font-semibold px-8 py-6 text-base">
-            Try Notes Generator
-          </Button>
-          <Button 
-            variant="outline" 
-            className="border-2 border-white text-blue-900 font-semibold px-8 py-6 text-base"
-          >
-            Learn More
-          </Button>
-
-          </div>
+          
         </div>
       </section>
     </div>
