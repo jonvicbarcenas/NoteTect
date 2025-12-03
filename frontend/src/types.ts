@@ -50,7 +50,7 @@ export interface CreateNoteRequest {
     title: string;
     filename: string;
     createdAt: string;
-    folder?: { id: number };
+    // Note: folderId is passed as a query parameter, not in the body
 }
 
 /**

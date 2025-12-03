@@ -6,3 +6,6 @@ export { default as SidebarSubjects } from './SidebarSubjects';
 export { default as SidebarNotes } from './SidebarNotes';
 export { default as GenerationTools } from './GenerationTools';
 export { default as OutputView } from './OutputView';
+export { default as SaveNotePopup } from './SaveNotePopup';
+export { default as DeleteConfirmDialog } from './DeleteConfirmDialog';
+export { default as UserProfilePopup } from './UserProfilePopup';
