@@ -21,7 +21,9 @@ function SidebarNotes({ refreshTrigger = 0, onNoteSelect }: SidebarNotesProps) {
         setIsLoading(true);
         try {
             const data = await notesService.getAll();
-            setNotes(data);
+            // Filter to only show uncategorized notes (notes without a folder)
+            const uncategorizedNotes = data.filter(note => !note.folder);
+            setNotes(uncategorizedNotes);
         } catch (error) {
             console.error('Failed to load notes:', error);
         } finally {

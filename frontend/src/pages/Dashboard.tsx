@@ -10,7 +10,7 @@ import { generateContent } from '../services/geminiService';
 import { notesService } from '../services/notes';
 import { Note, NoteType } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { Sidebar, GenerationTools } from '../components/dashboard';
+import { Sidebar, GenerationTools, SaveNotePopup } from '../components/dashboard';
 import OutputView from '../components/dashboard/OutputView';
 
 
@@ -28,8 +28,11 @@ function Dashboard() {
   const [isDragging, setIsDragging] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [notesRefreshTrigger, setNotesRefreshTrigger] = useState(0);
+  const [showSavePopup, setShowSavePopup] = useState(false);
+  const [savedNoteId, setSavedNoteId] = useState<number | null>(null); // Track if generated note was saved
+  const [popupMode, setPopupMode] = useState<'save' | 'configure'>('save');
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -37,25 +40,62 @@ function Dashboard() {
     navigate('/login');
   };
 
-  const handleSaveNote = async () => {
+  // Open popup for first-time save
+  const handleSaveClick = () => {
+    setPopupMode('save');
+    setShowSavePopup(true);
+  };
+
+  // Open popup for configuring/moving existing note
+  const handleConfigureClick = () => {
+    setPopupMode('configure');
+    setShowSavePopup(true);
+  };
+
+  // Handle saving a new note
+  const handleSaveNote = async (subjectId?: number, folderId?: number) => {
     if (!generatedOutput) return;
 
     setIsSaving(true);
     setSaveMessage(null);
 
     try {
-      await notesService.create({
+      const savedNote = await notesService.create({
         content: generatedOutput,
         filename: fileName || 'Untitled Note',
-        title: topic,
+        title: topic || 'Untitled',
         createdAt: new Date().toISOString(),
-      });
+      }, folderId);
+      setSavedNoteId(savedNote.id); // Mark as saved
       setSaveMessage('Note saved successfully!');
       setNotesRefreshTrigger(prev => prev + 1);
+      setShowSavePopup(false);
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (error) {
       console.error('Failed to save note:', error);
       setSaveMessage('Failed to save note');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Handle moving an existing note to a different folder
+  const handleMoveNote = async (subjectId?: number, folderId?: number) => {
+    const noteId = savedNoteId || selectedNote?.id;
+    if (!noteId) return;
+
+    setIsSaving(true);
+    setSaveMessage(null);
+
+    try {
+      await notesService.moveToFolder(noteId, folderId);
+      setSaveMessage('Note moved successfully!');
+      setNotesRefreshTrigger(prev => prev + 1);
+      setShowSavePopup(false);
+      setTimeout(() => setSaveMessage(null), 3000);
+    } catch (error) {
+      console.error('Failed to move note:', error);
+      setSaveMessage('Failed to move note');
     } finally {
       setIsSaving(false);
     }
@@ -73,6 +113,7 @@ function Dashboard() {
   const handleCloseOutput = () => {
     setSelectedNote(null);
     setGeneratedOutput(null);
+    setSavedNoteId(null); // Reset saved state
     setIsLoading(false);
     // Keep topic/context so user doesn't lose their work
   };
@@ -156,7 +197,7 @@ function Dashboard() {
   return (
     <div className="min-h-screen bg-background flex font-sans text-foreground">
       {/* Sidebar */}
-      <Sidebar user={user} onLogout={handleLogout} refreshTrigger={notesRefreshTrigger} onNoteSelect={handleNoteSelect} />
+      <Sidebar user={user} onLogout={handleLogout} refreshTrigger={notesRefreshTrigger} onNoteSelect={handleNoteSelect} onUserUpdate={updateUser} />
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden bg-secondary/30">
@@ -297,15 +338,17 @@ function Dashboard() {
               <div className={`${showInputForm ? 'lg:col-span-7' : 'lg:col-span-12'} h-full transition-all duration-500 ease-in-out`}>
                 {showOutput ? (
                    <OutputView
-                    id={selectedNote?.id}
+                    id={savedNoteId || selectedNote?.id}
                     title={selectedNote?.title || topic || 'Result'}
                     content={selectedNote?.content || generatedOutput || ''}
                     isLoading={isLoading}
                     isSaving={isSaving}
                     saveMessage={saveMessage}
-                    handleSaveNote={handleSaveNote}
+                    onSaveClick={handleSaveClick}
+                    onConfigureClick={handleConfigureClick}
                     onClose={handleCloseOutput}
                     isGenerated={!selectedNote && !!generatedOutput}
+                    isSaved={!!savedNoteId}
                     onTitleChange={handleTitleChange}
                   />
                 ) : (
@@ -338,6 +381,17 @@ function Dashboard() {
           </div>
         </div>
       </main>
+
+      {/* Save Note Popup */}
+      <SaveNotePopup
+        isOpen={showSavePopup}
+        onClose={() => setShowSavePopup(false)}
+        onSave={popupMode === 'save' ? handleSaveNote : handleMoveNote}
+        isSaving={isSaving}
+        noteTitle={selectedNote?.title || topic || 'Untitled'}
+        mode={popupMode}
+        currentFolderId={selectedNote?.folder?.id}
+      />
     </div>
   );
 }

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Save, Copy, Download, X, Pencil } from 'lucide-react';
+import { Loader2, Save, Settings2, Copy, Download, X, Pencil } from 'lucide-react';
 import { Input } from '../ui/input';
 
 interface OutputViewProps {
@@ -12,9 +12,11 @@ interface OutputViewProps {
   isLoading: boolean;
   isSaving?: boolean;
   saveMessage?: string | null;
-  handleSaveNote?: () => void;
+  onSaveClick?: () => void;
+  onConfigureClick?: () => void;
   onClose: () => void;
   isGenerated: boolean;
+  isSaved?: boolean; // Track if the generated note has been saved
   onTitleChange?: (id: number, newTitle: string) => void;
 }
 
@@ -25,9 +27,11 @@ const OutputView: React.FC<OutputViewProps> = ({
   isLoading,
   isSaving,
   saveMessage,
-  handleSaveNote,
+  onSaveClick,
+  onConfigureClick,
   onClose,
   isGenerated,
+  isSaved = false,
   onTitleChange,
 }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -70,28 +74,44 @@ const OutputView: React.FC<OutputViewProps> = ({
             )}
           </CardTitle>
           <div className="flex gap-2 items-center">
-            {isGenerated && handleSaveNote && (
-              <>
-                {saveMessage && (
-                  <span className={`text-xs ${saveMessage.includes('success') ? 'text-green-600' : 'text-red-600'}`}>
-                    {saveMessage}
-                  </span>
+            {saveMessage && (
+              <span className={`text-xs ${saveMessage.includes('success') ? 'text-green-600' : 'text-red-600'}`}>
+                {saveMessage}
+              </span>
+            )}
+            {/* Show Save button for unsaved generated notes */}
+            {isGenerated && !isSaved && onSaveClick && (
+              <Button
+                variant="default"
+                size="sm"
+                className="text-xs h-8 bg-green-600 hover:bg-green-700"
+                onClick={onSaveClick}
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                ) : (
+                  <Save className="w-3 h-3 mr-1" />
                 )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs h-8"
-                  onClick={handleSaveNote}
-                  disabled={isSaving}
-                >
-                  {isSaving ? (
-                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                  ) : (
-                    <Save className="w-3 h-3 mr-1" />
-                  )}
-                  Save
-                </Button>
-              </>
+                Save
+              </Button>
+            )}
+            {/* Show Configure button for saved notes (to move/transfer) */}
+            {((isGenerated && isSaved) || !isGenerated) && onConfigureClick && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-8"
+                onClick={onConfigureClick}
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                ) : (
+                  <Settings2 className="w-3 h-3 mr-1" />
+                )}
+                Configure
+              </Button>
             )}
             <Button
               variant="outline"

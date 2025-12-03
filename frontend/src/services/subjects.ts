@@ -14,6 +14,10 @@ export const subjectsService = {
     return api.post<Subject>('/subjects', data);
   },
 
+  async update(id: number, name: string): Promise<Subject> {
+    return api.put<Subject>(`/subjects/${id}`, { name });
+  },
+
   async delete(id: number): Promise<void> {
     return api.delete(`/subjects/${id}`);
   },

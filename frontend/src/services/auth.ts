@@ -102,4 +102,68 @@ export const authService = {
       // Ignore errors on logout
     }
   },
+
+  async updateName(name: string): Promise<User> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/update-name`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ name }),
+      });
+
+      if (!response.ok) {
+        const error: ApiError = {
+          message: 'Failed to update name. Please try again.',
+          status: response.status,
+        };
+        throw error;
+      }
+
+      return await response.json();
+    } catch (error) {
+      if ((error as ApiError).status) {
+        throw error;
+      }
+      throw {
+        message: 'Unable to connect to the server. Please try again later.',
+      } as ApiError;
+    }
+  },
+
+  async updatePassword(currentPassword: string, newPassword: string): Promise<User> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/update-password`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+
+      if (!response.ok) {
+        let message = 'Failed to update password. Please try again.';
+        if (response.status === 400) {
+          message = 'Current password is incorrect.';
+        }
+        const error: ApiError = {
+          message,
+          status: response.status,
+        };
+        throw error;
+      }
+
+      return await response.json();
+    } catch (error) {
+      if ((error as ApiError).status) {
+        throw error;
+      }
+      throw {
+        message: 'Unable to connect to the server. Please try again later.',
+      } as ApiError;
+    }
+  },
 };
