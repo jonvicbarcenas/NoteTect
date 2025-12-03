@@ -2,7 +2,7 @@ import { api } from './api';
 import { Folder, CreateFolderRequest } from '../types';
 
 export const foldersService = {
-  async getAll(): Promise<Folder[]> {
+  async getAll(id?: number): Promise<Folder[]> {
     return api.get<Folder[]>('/folders');
   },
 
