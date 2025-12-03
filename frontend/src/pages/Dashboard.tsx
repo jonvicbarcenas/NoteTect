@@ -13,6 +13,7 @@ import { useAuth } from '../context/AuthContext';
 import { Sidebar, GenerationTools } from '../components/dashboard';
 import OutputView from '../components/dashboard/OutputView';
 
+
 function Dashboard() {
   const [topic, setTopic] = useState('');
   const [context, setContext] = useState('');

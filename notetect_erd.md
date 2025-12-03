@@ -37,6 +37,7 @@ This ERD represents the database structure for NoteTect, an AI-powered note-taki
 **Primary Key:** id
 
 - id (PK) - INT, AUTO_INCREMENT
+- title - TEXT
 - content - TEXT
 - filename - VARCHAR(255)
 - created_at - VARCHAR(255)
