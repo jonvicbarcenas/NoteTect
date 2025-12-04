@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,15 +11,28 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion"
 import { useAuth } from "@/context/AuthContext"
 import { ApiError } from "@/types"
+import { getCookie, setCookie, deleteCookie } from "@/lib/cookies"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [rememberMe, setRememberMe] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
   const { login } = useAuth()
+
+  // Load saved email and password from cookie on component mount
+  useEffect(() => {
+    const savedEmail = getCookie("rememberedEmail")
+    const savedPassword = getCookie("rememberedPassword")
+    if (savedEmail && savedPassword) {
+      setEmail(savedEmail)
+      setPassword(savedPassword)
+      setRememberMe(true)
+    }
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -28,6 +41,18 @@ export default function LoginPage() {
 
     try {
       await login(email, password)
+      
+      // Handle Remember Me functionality
+      if (rememberMe) {
+        // Save email and password in cookie for 30 days
+        setCookie("rememberedEmail", email, 30)
+        setCookie("rememberedPassword", password, 30)
+      } else {
+        // Remove saved credentials if Remember Me is unchecked
+        deleteCookie("rememberedEmail")
+        deleteCookie("rememberedPassword")
+      }
+      
       navigate('/dashboard')
     } catch (err) {
       const apiError = err as ApiError
@@ -124,8 +149,15 @@ export default function LoginPage() {
             </motion.div>
 
             <div className="flex items-center justify-between text-sm">
-              <label htmlFor="remember" className="flex items-center gap-2 text-gray-600">
-                <input id="remember" name="remember" type="checkbox" className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600" />
+              <label htmlFor="remember" className="flex items-center gap-2 text-gray-600 cursor-pointer">
+                <input 
+                  id="remember" 
+                  name="remember" 
+                  type="checkbox" 
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600 cursor-pointer" 
+                />
                 Remember me
               </label>
               <Link to="#" className="text-blue-600 hover:underline">Forgot password?</Link>
