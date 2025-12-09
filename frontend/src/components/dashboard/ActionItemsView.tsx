@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, AlertCircle, AlertTriangle, Info, CheckCircle2, Circle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Loader2, AlertCircle, AlertTriangle, Info, CheckCircle2, Circle, Plus, Trash2 } from 'lucide-react';
 import { ActionItem, ActionItemsData } from '../../types';
 
 interface ActionItemsViewProps {
   noteId?: number;
   content: string;
   isLoading?: boolean;
+  isEditing?: boolean;
   onContentChange?: (newContent: string) => void;
 }
 
@@ -14,6 +16,7 @@ const ActionItemsView: React.FC<ActionItemsViewProps> = ({
   noteId,
   content, 
   isLoading = false,
+  isEditing = false,
   onContentChange 
 }) => {
   const [actionItems, setActionItems] = useState<ActionItem[]>([]);
@@ -23,7 +26,7 @@ const ActionItemsView: React.FC<ActionItemsViewProps> = ({
   const [sortBy, setSortBy] = useState<'priority' | 'status'>('priority');
 
   useEffect(() => {
-    if (isLoading || !content || content.trim().length === 0) {
+    if (isLoading || !content || content.trim().length === 0 || isEditing) {
       return;
     }
 
@@ -65,22 +68,60 @@ const ActionItemsView: React.FC<ActionItemsViewProps> = ({
     }, 500);
 
     return () => clearTimeout(parseTimeout);
-  }, [content, isLoading]);
+  }, [content, isLoading, isEditing]);
+
+  // Debounced effect for updating parent
+  useEffect(() => {
+    // Only trigger updates if editing is enabled
+    if (!isEditing) return;
+
+    const handler = setTimeout(() => {
+      const newContent = JSON.stringify({ actionItems: actionItems }, null, 2);
+      onContentChange?.(newContent);
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [actionItems, isEditing, onContentChange]);
+
 
   const toggleComplete = (id: string) => {
     setActionItems(prev => {
       const updated = prev.map(item =>
         item.id === id ? { ...item, completed: !item.completed } : item
       );
-
-      // Serialize updated list back to JSON string
-      const newContent = JSON.stringify({ actionItems: updated }, null, 2);
-
-      // Inform parent; parent decides whether to persist to DB
-      onContentChange?.(newContent);
-
+      
+      // Immediately save changes when toggling completion
+      if (onContentChange) {
+        const newContent = JSON.stringify({ actionItems: updated }, null, 2);
+        onContentChange(newContent);
+      }
+      
       return updated;
     });
+  };
+
+  // Editing functions
+  const updateActionItem = (id: string, field: 'text' | 'priority', value: string) => {
+    setActionItems(prev => prev.map(item =>
+      item.id === id ? { ...item, [field]: value } : item
+    ));
+  };
+
+  const addActionItem = () => {
+    const newItem: ActionItem = {
+      id: `item-${Date.now()}`,
+      text: '',
+      priority: 'medium',
+      completed: false,
+    };
+    setActionItems(prev => [...prev, newItem]);
+  };
+
+  const removeActionItem = (id: string) => {
+    if (actionItems.length <= 1) return;
+    setActionItems(prev => prev.filter(item => item.id !== id));
   };
 
   const getPriorityIcon = (priority: ActionItem['priority']) => {
@@ -170,6 +211,80 @@ if (isParsing || actionItems.length === 0) {
 
 const filteredItems = getFilteredAndSortedItems();
 
+// Editing mode view
+if (isEditing) {
+  return (
+    <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold">Edit Action Items</h2>
+        <Button onClick={addActionItem} variant="outline" size="sm">
+          <Plus className="w-4 h-4 mr-1" />
+          Add Item
+        </Button>
+      </div>
+
+      <div className="space-y-4">
+        {filteredItems.map((item) => (
+          <div
+            key={item.id}
+            className="border rounded-lg p-4 space-y-4 border-border"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">
+                {item.completed ? 'Completed' : 'Active'}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-100"
+                onClick={() => removeActionItem(item.id)}
+                disabled={actionItems.length <= 1}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Action Item Text
+              </label>
+              <Input
+                value={item.text}
+                onChange={(e) => updateActionItem(item.id, 'text', e.target.value)}
+                placeholder="Enter the action item..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Priority
+              </label>
+              <div className="flex gap-2">
+                {(['high', 'medium', 'low'] as const).map((priority) => (
+                  <Button
+                    key={priority}
+                    variant={item.priority === priority ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => updateActionItem(item.id, 'priority', priority)}
+                    className={item.priority === priority ? (
+                      priority === 'high' ? 'bg-red-500 hover:bg-red-600' :
+                      priority === 'medium' ? 'bg-yellow-500 hover:bg-yellow-600' :
+                      'bg-blue-500 hover:bg-blue-600'
+                    ) : ''}
+                  >
+                    {priority.charAt(0).toUpperCase() + priority.slice(1)}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Normal view mode
 return (
     <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
         {/* Header with Progress */}
