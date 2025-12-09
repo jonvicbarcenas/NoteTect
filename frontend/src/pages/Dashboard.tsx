@@ -155,6 +155,22 @@ function Dashboard() {
     }
   };
 
+  const handleContentChange = async (id: number, newContent: string) => {
+    // Update local state immediately
+    if (selectedNote && selectedNote.id === id) {
+      setSelectedNote({ ...selectedNote, content: newContent });
+    } else {
+      setGeneratedOutput(newContent);
+    }
+
+    // Persist to database
+    try {
+      await notesService.updateContent(id, newContent);
+    } catch (error) {
+      console.error("Failed to update note content:", error);
+    }
+  };
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -375,6 +391,7 @@ function Dashboard() {
                     isGenerated={!selectedNote && !!generatedOutput}
                     isSaved={!!savedNoteId}
                     onTitleChange={handleTitleChange}
+                    onContentChange={handleContentChange}
                     noteType={generatedOutput ? generatedNoteType : undefined}
                     onActionItemsContentChange={handleActionItemsContentChange}
                   />

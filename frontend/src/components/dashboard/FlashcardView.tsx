@@ -1,14 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, RotateCcw, Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { ChevronLeft, ChevronRight, RotateCcw, Loader2, Plus, Trash2 } from 'lucide-react';
 import { FlashcardData } from '../../types';
 
 interface FlashcardViewProps {
   content: string;
   isLoading?: boolean;
+  isEditing?: boolean;
+  onContentChange?: (newContent: string) => void;
 }
 
-const FlashcardView: React.FC<FlashcardViewProps> = ({ content, isLoading = false }) => {
+const FlashcardView: React.FC<FlashcardViewProps> = ({ 
+  content, 
+  isLoading = false,
+  isEditing = false,
+  onContentChange,
+}) => {
   const [flashcards, setFlashcards] = useState<FlashcardData['flashcards']>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -87,6 +96,33 @@ const FlashcardView: React.FC<FlashcardViewProps> = ({ content, isLoading = fals
     setIsFlipped(false);
   };
 
+  // Editing functions
+  const updateFlashcard = (index: number, field: 'front' | 'back', value: string) => {
+    const updated = flashcards.map((card, i) =>
+      i === index ? { ...card, [field]: value } : card
+    );
+    setFlashcards(updated);
+    onContentChange?.(JSON.stringify({ flashcards: updated }, null, 2));
+  };
+
+  const addFlashcard = () => {
+    const newCard = { front: '', back: '' };
+    const updated = [...flashcards, newCard];
+    setFlashcards(updated);
+    setCurrentIndex(updated.length - 1);
+    onContentChange?.(JSON.stringify({ flashcards: updated }, null, 2));
+  };
+
+  const removeFlashcard = (index: number) => {
+    if (flashcards.length <= 1) return;
+    const updated = flashcards.filter((_, i) => i !== index);
+    setFlashcards(updated);
+    if (currentIndex >= updated.length) {
+      setCurrentIndex(updated.length - 1);
+    }
+    onContentChange?.(JSON.stringify({ flashcards: updated }, null, 2));
+  };
+
   if (error) {
     return (
       <div className="flex items-center justify-center h-full min-h-[400px] p-4">
@@ -124,6 +160,76 @@ const FlashcardView: React.FC<FlashcardViewProps> = ({ content, isLoading = fals
 
   const currentCard = flashcards[currentIndex];
 
+  // Editing mode view
+  if (isEditing) {
+    return (
+      <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold">Edit Flashcards</h2>
+          <Button onClick={addFlashcard} variant="outline" size="sm">
+            <Plus className="w-4 h-4 mr-1" />
+            Add Card
+          </Button>
+        </div>
+
+        <div className="space-y-4">
+          {flashcards.map((card, index) => (
+            <div
+              key={index}
+              className={`border rounded-lg p-4 space-y-4 ${
+                index === currentIndex ? 'border-primary bg-primary/5' : 'border-border'
+              }`}
+              onClick={() => setCurrentIndex(index)}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-muted-foreground">
+                  Card {index + 1}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-100"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeFlashcard(index);
+                  }}
+                  disabled={flashcards.length <= 1}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Question (Front)
+                </label>
+                <Textarea
+                  value={card.front}
+                  onChange={(e) => updateFlashcard(index, 'front', e.target.value)}
+                  placeholder="Enter the question..."
+                  className="min-h-[80px]"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Answer (Back)
+                </label>
+                <Textarea
+                  value={card.back}
+                  onChange={(e) => updateFlashcard(index, 'back', e.target.value)}
+                  placeholder="Enter the answer..."
+                  className="min-h-[80px]"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Normal view mode
   return (
     <div className="flex flex-col items-center justify-center h-full min-h-[500px] p-4 space-y-8">
       {/* Card Counter */}

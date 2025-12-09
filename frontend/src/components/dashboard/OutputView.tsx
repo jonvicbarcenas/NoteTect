@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Save, Settings2, Copy, Download, X, Pencil } from 'lucide-react';
+import { Loader2, Save, Settings2, Copy, Download, X, Pencil, Check } from 'lucide-react';
 import { Input } from '../ui/input';
+import { Textarea } from '../ui/textarea';
 import { NoteType } from '../../types';
 import FlashcardView from './FlashcardView';
 import ActionItemsView from './ActionItemsView';
@@ -21,6 +22,7 @@ interface OutputViewProps {
   isGenerated: boolean;
   isSaved?: boolean; // Track if the generated note has been saved
   onTitleChange?: (id: number, newTitle: string) => void;
+  onContentChange?: (id: number, newContent: string) => void;
   noteType?: NoteType; // Add noteType prop to determine rendering mode
   onActionItemsContentChange?: (noteId: number | undefined, newContent: string) => void;
 }
@@ -38,21 +40,38 @@ const OutputView: React.FC<OutputViewProps> = ({
   isGenerated,
   isSaved = false,
   onTitleChange,
+  onContentChange,
   noteType,
   onActionItemsContentChange,
 }) => {
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [currentTitle, setCurrentTitle] = useState(title);
+  const [currentContent, setCurrentContent] = useState(content);
 
   useEffect(() => {
     setCurrentTitle(title);
   }, [title]);
 
-  const handleTitleBlur = () => {
-    setIsEditingTitle(false);
-    if (onTitleChange && id && currentTitle.trim() && currentTitle.trim() !== title) {
-      onTitleChange(id, currentTitle.trim());
+  useEffect(() => {
+    setCurrentContent(content);
+  }, [content]);
+
+  const handleSaveEdit = () => {
+    setIsEditing(false);
+    if (id) {
+      if (onTitleChange && currentTitle.trim() && currentTitle.trim() !== title) {
+        onTitleChange(id, currentTitle.trim());
+      }
+      if (onContentChange && currentContent !== content) {
+        onContentChange(id, currentContent);
+      }
     }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setCurrentTitle(title);
+    setCurrentContent(content);
   };
 
   // Auto-detect if content is flashcard JSON
@@ -104,23 +123,41 @@ const OutputView: React.FC<OutputViewProps> = ({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <span className={`w-2 h-6 ${isGenerated ? 'bg-green-500' : 'bg-blue-500'} rounded-full`} />
-            {isEditingTitle ? (
+            {isEditing ? (
               <Input
                 value={currentTitle}
                 onChange={(e) => setCurrentTitle(e.target.value)}
-                onBlur={handleTitleBlur}
-                onKeyDown={(e) => e.key === 'Enter' && handleTitleBlur()}
                 className="text-2xl font-bold h-9"
                 autoFocus
               />
             ) : (
-              <span onClick={() => !isGenerated && setIsEditingTitle(true)} className="cursor-pointer">{title || 'Untitled Note'}</span>
+              <span onClick={() => !isGenerated && setIsEditing(true)} className="cursor-pointer">{title || 'Untitled Note'}</span>
             )}
-            {!isGenerated && !isEditingTitle && (
+            {!isGenerated && !isEditing && (
               <Pencil
                 className="w-4 h-4 ml-2 cursor-pointer text-muted-foreground hover:text-foreground"
-                onClick={() => setIsEditingTitle(true)}
+                onClick={() => setIsEditing(true)}
               />
+            )}
+            {isEditing && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-100"
+                  onClick={handleSaveEdit}
+                >
+                  <Check className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-100"
+                  onClick={handleCancelEdit}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </>
             )}
           </CardTitle>
           <div className="flex gap-2 items-center">
@@ -206,15 +243,29 @@ const OutputView: React.FC<OutputViewProps> = ({
             </p>
           </div>
         ) : shouldRenderAsFlashcard ? (
-          <FlashcardView content={content} isLoading={isLoading} />
+          <FlashcardView 
+            content={content} 
+            isLoading={isLoading} 
+            isEditing={isEditing}
+            onContentChange={(newContent) => setCurrentContent(newContent)}
+          />
         ) : shouldRenderAsActionItems ? (
           <ActionItemsView 
             noteId={id}
             content={content} 
             isLoading={isLoading}
+            isEditing={isEditing}
             onContentChange={(newContent) => {
+              setCurrentContent(newContent);
               onActionItemsContentChange?.(id, newContent);
             }}
+          />
+        ) : isEditing ? (
+          <Textarea
+            value={currentContent}
+            onChange={(e) => setCurrentContent(e.target.value)}
+            className="min-h-[500px] w-full max-w-4xl mx-auto font-mono text-sm"
+            placeholder="Enter note content..."
           />
         ) : (
           <div className="prose prose-slate dark:prose-invert max-w-4xl mx-auto prose-headings:font-bold prose-h1:text-3xl prose-h2:text-2xl prose-p:text-lg prose-p:leading-relaxed prose-li:text-lg">
