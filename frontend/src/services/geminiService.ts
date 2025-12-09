@@ -26,10 +26,34 @@ const generateWithOpenRouter = async (
     const selectedType = NOTE_TYPES.find(t => t.id === params.type);
     const systemPrompt = selectedType?.prompt || 'Summarize this text.';
 
-    // OpenRouter API doesn't support image input in the same way, so we'll include it in the text if present
-    let userContent = params.text || '';
-    if (params.imageBase64) {
-        userContent += '\n\n[Note: Image content was provided but OpenRouter API doesn\'t support image analysis in this implementation]';
+    // Build content array for multimodal support (text + images/PDFs)
+    const contentParts: any[] = [];
+
+    // Add system prompt as text
+    if (systemPrompt) {
+        contentParts.push({
+            type: 'text',
+            text: systemPrompt
+        });
+    }
+
+    // Add user text if present
+    if (params.text) {
+        contentParts.push({
+            type: 'text',
+            text: params.text
+        });
+    }
+
+    // Add image if present (using proper OpenRouter multimodal format)
+    if (params.imageBase64 && params.imageMimeType) {
+        contentParts.push({
+            type: 'file',
+            file: {
+                filename: 'uploaded_image',
+                file_data: `data:${params.imageMimeType};base64,${params.imageBase64}`
+            }
+        });
     }
 
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -41,12 +65,22 @@ const generateWithOpenRouter = async (
             'X-Title': 'NoteTect'
         },
         body: JSON.stringify({
-            model: 'qwen/qwen3-235b-a22b:free', // Using free Gemini model via OpenRouter
+            model: 'z-ai/glm-4.5-air:free',
             messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: userContent }
+                {
+                    role: 'user',
+                    content: contentParts
+                }
             ],
-            stream: true
+            stream: true,
+            plugins: [
+                {
+                    id: 'file-parser',
+                    pdf: {
+                        engine: 'pdf-text', // or 'mistral-ocr' or 'native'
+                    },
+                },
+            ],
         })
     });
 

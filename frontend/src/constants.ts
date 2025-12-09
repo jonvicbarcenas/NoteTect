@@ -94,7 +94,16 @@ Generate 3-10 action items based on the key tasks and takeaways in the content. 
     icon: CreditCard,
     prompt: `Create flashcards from the following content. Generate question and answer pairs that help with memorization and understanding. 
 
-Output ONLY valid JSON in this exact format (no additional text, no markdown code blocks, no explanations):
+CRITICAL JSON FORMATTING RULES:
+1. Output ONLY valid, parseable JSON - no markdown code blocks, no explanations, no extra text
+2. ALL strings must be properly enclosed in double quotes
+3. Escape any double quotes within content using backslash: \"
+4. Do NOT include line breaks within the "front" or "back" strings
+5. Keep all content on a single line within each field
+6. Ensure every opening brace/bracket has a matching closing brace/bracket
+7. Do NOT truncate or cut off any fields - complete every "front" and "back" fully
+
+Required JSON format:
 
 {
   "flashcards": [
@@ -119,10 +128,14 @@ Example output:
     {
       "front": "What are the main stages of photosynthesis?",
       "back": "Light-dependent reactions and the Calvin cycle (light-independent reactions)."
+    },
+    {
+      "front": "How do you include quotes in JSON strings?",
+      "back": "Use backslash to escape them like this: \\\"quoted text\\\" within the string."
     }
   ]
 }
 
-Generate 5-10 flashcards based on the key concepts in the content. Output ONLY the JSON, nothing else.`
+Generate 5-10 flashcards based on the key concepts in the content. Verify your JSON is valid before outputting. Output ONLY the JSON, nothing else.`
   }
 ];
