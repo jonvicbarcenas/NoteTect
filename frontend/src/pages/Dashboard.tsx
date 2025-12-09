@@ -12,6 +12,7 @@ import { Note, NoteType } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { Sidebar, GenerationTools, SaveNotePopup } from '../components/dashboard';
 import OutputView from '../components/dashboard/OutputView';
+import mammoth from 'mammoth';
 
 
 function Dashboard() {
@@ -26,6 +27,7 @@ function Dashboard() {
   const [selectedFile, setSelectedFile] = useState<string | undefined>(undefined);
   const [fileMimeType, setFileMimeType] = useState<string | undefined>(undefined);
   const [fileName, setFileName] = useState<string | undefined>(undefined);
+  const [extractedText, setExtractedText] = useState<string | undefined>(undefined);
   const [isDragging, setIsDragging] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [notesRefreshTrigger, setNotesRefreshTrigger] = useState(0);
@@ -139,6 +141,9 @@ function Dashboard() {
     setGeneratedOutput(null);
     setSavedNoteId(null); // Reset saved state
     setIsLoading(false);
+    setExtractedText(undefined); // Clear extracted text
+    setSelectedFile(undefined); // Clear file
+    setFileName(undefined); // Clear file name
     // Keep topic/context so user doesn't lose their work
   };
 
@@ -193,21 +198,49 @@ function Dashboard() {
     if (file) processFile(file);
   };
 
-  const processFile = (file: File) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64String = reader.result as string;
-      const base64Data = base64String.split(',')[1];
-      setSelectedFile(base64Data);
-      setFileMimeType(file.type);
-      setFileName(file.name);
-    };
-    reader.readAsDataURL(file);
+  const processFile = async (file: File) => {
+    setFileName(file.name);
+    setFileMimeType(file.type);
+
+    // Handle DOCX files - extract text
+    if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        setExtractedText(result.value);
+        setSelectedFile(undefined); // Don't send as base64
+        console.log('DOCX text extracted successfully');
+      } catch (error) {
+        console.error('Error extracting DOCX text:', error);
+        alert('Failed to read DOCX file. Please try a different file format.');
+      }
+    }
+    // Handle PDF and images - send as base64
+    else if (file.type.startsWith('image/') || file.type === 'application/pdf') {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        const base64Data = base64String.split(',')[1];
+        setSelectedFile(base64Data);
+        setExtractedText(undefined);
+      };
+      reader.readAsDataURL(file);
+    }
+    // Handle text files - extract text
+    else if (file.type === 'text/plain') {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const text = reader.result as string;
+        setExtractedText(text);
+        setSelectedFile(undefined);
+      };
+      reader.readAsText(file);
+    }
   };
 
   const onGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!topic && !context && !selectedFile) return;
+    if (!topic && !context && !selectedFile && !extractedText) return;
 
     setIsLoading(true);
     setGeneratedOutput('');
@@ -215,7 +248,12 @@ function Dashboard() {
     setGeneratedNoteType(activeType); // Store the type of note being generated
 
     try {
-      const prompt = `Topic: ${topic}\nContext: ${context}`;
+      // Build prompt with extracted text if available
+      let prompt = `Topic: ${topic}\nContext: ${context}`;
+      if (extractedText) {
+        prompt += `\n\nDocument Content:\n${extractedText}`;
+      }
+
       await generateContent({
         text: prompt,
         type: activeType,
