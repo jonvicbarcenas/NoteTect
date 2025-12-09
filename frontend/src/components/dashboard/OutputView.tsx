@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Save, Settings2, Copy, Download, X, Pencil } from 'lucide-react';
 import { Input } from '../ui/input';
+import { NoteType } from '../../types';
+import FlashcardView from './FlashcardView';
 
 interface OutputViewProps {
   id?: number;
@@ -18,6 +20,7 @@ interface OutputViewProps {
   isGenerated: boolean;
   isSaved?: boolean; // Track if the generated note has been saved
   onTitleChange?: (id: number, newTitle: string) => void;
+  noteType?: NoteType; // Add noteType prop to determine rendering mode
 }
 
 const OutputView: React.FC<OutputViewProps> = ({
@@ -33,6 +36,7 @@ const OutputView: React.FC<OutputViewProps> = ({
   isGenerated,
   isSaved = false,
   onTitleChange,
+  noteType,
 }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [currentTitle, setCurrentTitle] = useState(title);
@@ -47,6 +51,28 @@ const OutputView: React.FC<OutputViewProps> = ({
       onTitleChange(id, currentTitle.trim());
     }
   };
+
+  // Auto-detect if content is flashcard JSON
+  const isFlashcardContent = (content: string): boolean => {
+    if (!content) return false;
+    try {
+      const trimmed = content.trim();
+      if (trimmed.startsWith('{') || trimmed.startsWith('```')) {
+        const cleaned = trimmed.replace(/^```json?\s*/i, '').replace(/```\s*$/g, '');
+        const jsonStart = cleaned.indexOf('{');
+        const jsonEnd = cleaned.lastIndexOf('}');
+        if (jsonStart !== -1 && jsonEnd !== -1) {
+          const json = JSON.parse(cleaned.substring(jsonStart, jsonEnd + 1));
+          return json.flashcards && Array.isArray(json.flashcards);
+        }
+      }
+    } catch {
+      return false;
+    }
+    return false;
+  };
+
+  const shouldRenderAsFlashcard = noteType === NoteType.FLASHCARD || isFlashcardContent(content);
 
   return (
     <Card className="h-full min-h-[80vh] border-border/50 shadow-xl shadow-black/5 flex flex-col animate-in fade-in zoom-in-95 duration-500">
@@ -155,6 +181,8 @@ const OutputView: React.FC<OutputViewProps> = ({
               {isGenerated ? 'Generating your note...' : 'Loading note...'}
             </p>
           </div>
+        ) : shouldRenderAsFlashcard ? (
+          <FlashcardView content={content} isLoading={isLoading} />
         ) : (
           <div className="prose prose-slate dark:prose-invert max-w-4xl mx-auto prose-headings:font-bold prose-h1:text-3xl prose-h2:text-2xl prose-p:text-lg prose-p:leading-relaxed prose-li:text-lg">
             <ReactMarkdown>{content}</ReactMarkdown>

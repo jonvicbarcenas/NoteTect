@@ -43,7 +43,7 @@ export const generateContent = async (
             const chunkText = chunk.text();
             fullText += chunkText;
             if (onChunk) {
-                onChunk(fullText);
+                onChunk(chunkText); // Pass only the new chunk, not accumulated text
             }
         }
         return fullText;
