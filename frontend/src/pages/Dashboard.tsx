@@ -18,6 +18,7 @@ function Dashboard() {
   const [topic, setTopic] = useState('');
   const [context, setContext] = useState('');
   const [activeType, setActiveType] = useState<NoteType>(NoteType.SUMMARY);
+  const [generatedNoteType, setGeneratedNoteType] = useState<NoteType>(NoteType.SUMMARY); // Track type of generated note
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [generatedOutput, setGeneratedOutput] = useState<string | null>(null);
@@ -172,6 +173,7 @@ function Dashboard() {
     setIsLoading(true);
     setGeneratedOutput('');
     setSelectedNote(null);
+    setGeneratedNoteType(activeType); // Store the type of note being generated
 
     try {
       const prompt = `Topic: ${topic}\nContext: ${context}`;
@@ -350,6 +352,7 @@ function Dashboard() {
                     isGenerated={!selectedNote && !!generatedOutput}
                     isSaved={!!savedNoteId}
                     onTitleChange={handleTitleChange}
+                    noteType={generatedOutput ? generatedNoteType : undefined}
                   />
                 ) : (
                   <div className="h-full min-h-[400px] border-2 border-dashed border-border/60 rounded-xl flex flex-col items-center justify-center text-center p-8 text-muted-foreground bg-secondary/10">

@@ -3,7 +3,18 @@ export enum NoteType {
     SUMMARY = 'SUMMARY',
     STUDY_GUIDE = 'STUDY_GUIDE',
     SIMPLIFY = 'SIMPLIFY',
-    ACTION_ITEMS = 'ACTION_ITEMS'
+    ACTION_ITEMS = 'ACTION_ITEMS',
+    FLASHCARD = 'FLASHCARD'
+}
+
+// ============ Flashcard Interface ============
+export interface Flashcard {
+    front: string;
+    back: string;
+}
+
+export interface FlashcardData {
+    flashcards: Flashcard[];
 }
 
 // ============ Entity Interfaces ============

@@ -28,6 +28,9 @@ public class Note {
     // Timestamp for creation
     private String createdAt;
 
+    // The type of note (SUMMARY, STUDY_GUIDE, SIMPLIFY, ACTION_ITEMS, FLASHCARD)
+    private String noteType;
+
     // The user who owns this note
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -48,6 +51,17 @@ public class Note {
         this.title = title;
         this.filename = filename;
         this.createdAt = createdAt;
+        this.user = user;
+        this.folder = folder;
+    }
+
+    public Note(int id, String content, String title, String filename, String createdAt, String noteType, User user, Folder folder) {
+        this.id = id;
+        this.content = content;
+        this.title = title;
+        this.filename = filename;
+        this.createdAt = createdAt;
+        this.noteType = noteType;
         this.user = user;
         this.folder = folder;
     }
@@ -73,4 +87,7 @@ public class Note {
 
     public Folder getFolder() { return folder; }
     public void setFolder(Folder folder) { this.folder = folder; }
+
+    public String getNoteType() { return noteType; }
+    public void setNoteType(String noteType) { this.noteType = noteType; }
 }
