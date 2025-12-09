@@ -17,6 +17,18 @@ export interface FlashcardData {
     flashcards: Flashcard[];
 }
 
+// ============ Action Items Interface ============
+export interface ActionItem {
+    id: string;
+    text: string;
+    priority: 'high' | 'medium' | 'low';
+    completed: boolean;
+}
+
+export interface ActionItemsData {
+    actionItems: ActionItem[];
+}
+
 // ============ Entity Interfaces ============
 export interface User {
     userId: number;
@@ -44,6 +56,7 @@ export interface Note {
     title: string;
     filename: string;
     createdAt: string;
+    noteType?: string;
     folder?: Folder;
     // Note: subject is now accessed through folder.subject (via Folder)
 }
@@ -61,6 +74,7 @@ export interface CreateNoteRequest {
     title: string;
     filename: string;
     createdAt: string;
+    noteType?: string;
     // Note: folderId is passed as a query parameter, not in the body
 }
 

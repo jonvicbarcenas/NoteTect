@@ -63,4 +63,14 @@ public class NoteController {
         Integer userId = (Integer) authentication.getPrincipal();
         return noteService.moveNoteToFolder(id, folderId, userId);
     }
+
+    // Update note content (for action items, etc.)
+    @PutMapping("/{id}/content")
+    public Note updateNoteContent(@PathVariable int id, 
+                                  @RequestBody java.util.Map<String, String> payload,
+                                  Authentication authentication) {
+        Integer userId = (Integer) authentication.getPrincipal();
+        String content = payload.get("content");
+        return noteService.updateNoteContent(id, content, userId);
+    }
 }

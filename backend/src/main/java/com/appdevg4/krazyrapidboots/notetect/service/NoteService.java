@@ -89,4 +89,17 @@ public class NoteService {
 
         return noteRepository.save(note);
     }
+
+    // Update note content (for action items completion status, etc.)
+    public Note updateNoteContent(int id, String content, Integer userId) {
+        Note note = noteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Note not found with id " + id));
+
+        if (!note.getUser().getUserId().equals(userId)) {
+            throw new RuntimeException("User not authorized to update this note.");
+        }
+
+        note.setContent(content);
+        return noteRepository.save(note);
+    }
 }

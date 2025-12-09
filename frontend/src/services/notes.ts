@@ -32,6 +32,11 @@ export const notesService = {
     return api.put<Note>(`/notes/${id}`, { title });
   },
 
+  // Update note content (for action items completion, etc.)
+  async updateContent(id: number, content: string): Promise<Note> {
+    return api.put<Note>(`/notes/${id}/content`, { content });
+  },
+
   // Move note to a different folder (new endpoint)
   async moveToFolder(noteId: number, folderId?: number): Promise<Note> {
     const endpoint = folderId 
