@@ -16,7 +16,7 @@ export const generateContent = async (
     onChunk?: (text: string) => void
 ): Promise<string> => {
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemma-3-27b-it" });
 
         const selectedType = NOTE_TYPES.find(t => t.id === params.type);
         const systemPrompt = selectedType?.prompt || 'Summarize this text.';

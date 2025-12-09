@@ -66,6 +66,7 @@ function Dashboard() {
         filename: fileName || 'Untitled Note',
         title: topic || 'Untitled',
         createdAt: new Date().toISOString(),
+        noteType: generatedNoteType,
       }, folderId);
       setSavedNoteId(savedNote.id); // Mark as saved
       setSaveMessage('Note saved successfully!');
@@ -99,6 +100,28 @@ function Dashboard() {
       setSaveMessage('Failed to move note');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Handle action items content changes (for completion status)
+  const handleActionItemsContentChange = async (noteId: number | undefined, newContent: string) => {
+    // Always keep local UI in sync
+    if (selectedNote) {
+      setSelectedNote({ ...selectedNote, content: newContent });
+    } else {
+      // Generated-but-not-selected path
+      setGeneratedOutput(newContent);
+    }
+
+    // If the note is not yet saved in DB, do NOT call the API
+    if (!noteId) return;
+
+    try {
+      await notesService.updateContent(noteId, newContent);
+      // No need to refresh notes list - content changes don't affect the sidebar
+    } catch (err) {
+      console.error('Failed to update note content:', err);
+      // Optionally show toast/error
     }
   };
   
@@ -353,6 +376,7 @@ function Dashboard() {
                     isSaved={!!savedNoteId}
                     onTitleChange={handleTitleChange}
                     noteType={generatedOutput ? generatedNoteType : undefined}
+                    onActionItemsContentChange={handleActionItemsContentChange}
                   />
                 ) : (
                   <div className="h-full min-h-[400px] border-2 border-dashed border-border/60 rounded-xl flex flex-col items-center justify-center text-center p-8 text-muted-foreground bg-secondary/10">
