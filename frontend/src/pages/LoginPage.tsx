@@ -160,7 +160,6 @@ export default function LoginPage() {
                 />
                 Remember me
               </label>
-              <Link to="#" className="text-blue-600 hover:underline">Forgot password?</Link>
             </div>
 
             <motion.div
